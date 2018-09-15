@@ -5,8 +5,9 @@ import java.text.SimpleDateFormat
 import io.circe.Json
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
+import xiatian.common.MyConf
 import xiatian.spider.actor.master.db.{BadLinkDb, CrawlDb, SignatureDb, StatsDb}
-import xiatian.spider.model.{FetchLink, LinkType}
+import xiatian.spider.model.{FetchLink, FetchTask, LinkType}
 
 import scala.concurrent.Future
 
@@ -28,10 +29,12 @@ object UrlManager extends MasterConfig {
     * url是否已经被抓取过
     */
   def isFetched(link: FetchLink) = {
-    //1000 days: 86400000L
-    val seconds = link.`type`.refreshInSeconds
+    val expiredSeconds: Long = FetchTask.get(link).map {
+      task =>
+        task.nextFetchSeconds(link).getOrElse(MyConf.MaxTimeSeconds)
+    }.getOrElse(MyConf.MaxTimeSeconds)
 
-    SignatureDb.fetchedDb.has(link.urlHash, seconds)
+    SignatureDb.fetchedDb.has(link.urlHash, expiredSeconds)
   }
 
   /**

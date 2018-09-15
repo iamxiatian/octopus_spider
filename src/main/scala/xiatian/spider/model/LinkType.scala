@@ -15,9 +15,6 @@ sealed trait LinkType {
 
   def priority = PRIORITY_NORMAL
 
-  //该类型链接的默认更新频度为1000年，即不再更新
-  def refreshInSeconds = 86400L * 365 * 1000
-
   /**
     * 该类型链接对应的抽取器
     */
@@ -59,10 +56,6 @@ case object HubLink extends LinkType {
   override def extractor: Extractor = EmptyExtractor
 
   override def saver: Saver = EmptySaver
-
-  //更新频率为7天
-  override def refreshInSeconds = 86400L * 7
-
 }
 
 object LinkType {

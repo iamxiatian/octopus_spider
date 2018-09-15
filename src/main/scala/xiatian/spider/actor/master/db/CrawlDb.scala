@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import org.slf4j.LoggerFactory
 import xiatian.common.MyConf
-import xiatian.spider.model.{FetchLink, LinkType}
+import xiatian.spider.model.{FetchLink, FetchTask, LinkType}
 
 import scala.util.{Failure, Success, Try}
 
@@ -112,13 +112,18 @@ object CrawlDb extends Db {
   }
 
   /**
-    * URL是否已经在队列中了， 半天+一天乘以深度作为过期日期
+    * URL是否已经在队列中了
     *
     * @param link
     * @return
     */
   def has(link: FetchLink): Boolean = {
-    getSignatureDb(link.`type`).has(link.urlHash, link.`type`.refreshInSeconds)
+    val expiredSeconds = FetchTask.get(link).map {
+      task =>
+        task.nextFetchSeconds(link).getOrElse(MyConf.MaxTimeSeconds)
+    }.getOrElse(MyConf.MaxTimeSeconds)
+
+    getSignatureDb(link.`type`).has(link.urlHash, expiredSeconds)
   }
 
   def queueSize(t: LinkType) = getCrawlDb(t).count()

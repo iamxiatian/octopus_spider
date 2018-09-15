@@ -113,13 +113,13 @@ class FetchMasterActor extends Actor with ActorLogging {
         Future.successful {
           WaitDb.push(if (link.retries > 0) link.copy(0) else link)
         }
-        //把子链接入爬行队列, 超过一定深度则忽略。最大深度需要后续变为可配置参数
+        //把子链接入爬行队列
         childLinks.foreach {
-          l =>
-            if (l.depth > MyConf.maxLinkDepth) {
-              log.warning(s"Skip ${l.url} because its depth(${l.depth}) is " +
-                s"greater than max value ${MyConf.maxLinkDepth}")
-            } else UrlManager.pushLink(l)
+          childLink =>
+            FetchTask.get(childLink) map {
+              task =>
+                task.filter(childLink).map(UrlManager.pushLink)
+            }
         }
       } else {
         //记录错误信息

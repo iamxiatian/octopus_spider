@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import com.typesafe.config.impl.Parseable
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+import org.joda.time.DateTime
 import org.zhinang.conf.Configuration
 import org.zhinang.protocol.http.HttpClientAgent
 import xiatian.common.util.Machine
@@ -46,6 +47,11 @@ object MyConf {
       ConfigFactory.load()
     }
   }
+
+  /**
+    * 最大保留的时间值，以秒为单位；例如，抓取时间超过该数值的链接将会抛弃掉
+    */
+  val MaxTimeSeconds = DateTime.parse("2999-01-01").getMillis / 1000
 
 
   //文章链接的停用词，如果文章锚文本与其中的词语相同，则过滤掉该链接
