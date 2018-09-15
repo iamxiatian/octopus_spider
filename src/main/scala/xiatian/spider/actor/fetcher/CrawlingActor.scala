@@ -36,8 +36,8 @@ class CrawlingActor(storeClient: ActorRef) extends Actor with ActorLogging {
         } else if (response.getContentType != "text/html") {
           sender() ! FetchFinished(link, List.empty, FetchCode.Not_HTML, fetcherId)
         } else {
-          //把采集到的内容保存起来
-          pageCacheActor ! CachingPage(link.url, link.`type`, response.getContent, response.getEncoding)
+          //TODO: 根据设置信息：把采集到的内容保存起来
+          // pageCacheActor ! CachingPage(link.url, link.`type`, response.getContent, response.getEncoding)
 
           val doc: Document = Jsoup.parse(
             new ByteArrayInputStream(response.getContent),

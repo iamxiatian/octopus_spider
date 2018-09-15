@@ -8,7 +8,7 @@ import xiatian.common.MyConf
 import xiatian.spider.actor._
 import xiatian.spider.actor.master.MasterVariable._
 import xiatian.spider.actor.master.db.{FetchLogDb, WaitDb}
-import xiatian.spider.model.Task
+import xiatian.spider.model.FetchTask
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -70,7 +70,7 @@ class FetchMasterActor extends Actor with ActorLogging {
 
     BucketController.getFetchLink(fetcherHost, fetcherId) match {
       case Some(link) =>
-        Task.context(link.taskId) match {
+        FetchTask.context(link.taskId) match {
           case Some(context) =>
             //把当前链接标记为正在抓取，且不在桶中
             UrlManager.markFetching(link)

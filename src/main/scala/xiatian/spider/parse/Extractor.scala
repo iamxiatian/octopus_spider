@@ -20,6 +20,8 @@ trait Extractor {
 case object EmptyExtractor extends Extractor {
   def extract(link: FetchLink,
               doc: Document,
-              proxyHolder: Option[ProxyIp]): Future[Either[String, ExtractResult]] =
-    Future(Right(ExtractResult(link, List.empty[FetchLink], Map.empty[String, Any])))
+              proxyHolder: Option[ProxyIp]
+             ): Future[Either[String, ExtractResult]] = Future(
+    Right(ExtractResult(link, List.empty[FetchLink], Map.empty[String, Any]))
+  )
 }

@@ -21,29 +21,14 @@ case class DataPageRule()
 /**
   * 任务特质，各类任务具有的基本行为
   */
-sealed trait Task {
+sealed trait FetchTask {
   def id: String
 
   def name: String
-
-  //  /**
-  //    * Minimum seconds for Refresh Cycle for Navigate Page(LP),
-  //    *
-  //    * @return
-  //    */
-  //  def navCycle: Long
-  //
-  //  /**
-  //    * Minimum seconds for Refresh Cycle for Data Page(DP),
-  //    *
-  //    * @return
-  //    */
-  //  def dataCycle: Long
 }
 
 /**
   * XML类型的Task
-  *
   */
 case class XmlTask(id: String,
                    name: String,
@@ -53,30 +38,19 @@ case class XmlTask(id: String,
                    entries: List[Entry] = List.empty,
                    listPageRules: List[NavPageRule] = List.empty,
                    dataPageRules: List[DataPageRule] = List.empty
-                  ) extends Task
+                  ) extends FetchTask
 
 
-object AmazonBookTask extends Task {
-  val id = "AmazonTask"
-  val name = "亚马逊图书任务"
-}
-
-object BingBookTask extends Task {
-  val id = "BingTask"
-  val name = "必应图书任务"
-}
-
-object Task {
-  private val LOG = LoggerFactory.getLogger(Task.getClass)
+object FetchTask {
+  private val LOG = LoggerFactory.getLogger(FetchTask.getClass)
 
   def context(taskId: String): Option[Context] = Some(Context())
 
   def count(): Int = 0
 
-  def get(taskId: String): Option[Task] = {
+  def get(taskId: String): Option[FetchTask] = {
     taskId match {
-      case AmazonBookTask.id => Some(AmazonBookTask)
-      case BingBookTask.id => Some(BingBookTask)
+      //case AmazonBookTask.id => Some(AmazonBookTask)
       case _ =>
         LOG.error(s"task $taskId does not exist.")
         None
