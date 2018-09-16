@@ -76,7 +76,7 @@ class FetchMasterActor extends Actor with ActorLogging {
             UrlManager.markFetching(link)
 
             val proxyHolder: Option[ProxyIp] = ProxyIpPool.take()
-            currentSender ! NormalFetchTask(link, context, proxyHolder)
+            currentSender ! NormalFetchJob(link, context, proxyHolder)
 
             log.info(s"send ${link.url} to fetcher ${fetcherId}")
 
@@ -86,10 +86,10 @@ class FetchMasterActor extends Actor with ActorLogging {
           case None =>
             log.warning(s"Can NOT find board context: " +
               s"code=> ${link.taskId}, url=> ${link.url}")
-            currentSender ! EmptyFetchTask()
+            currentSender ! EmptyFetchJob()
         }
       case None =>
-        currentSender ! EmptyFetchTask()
+        currentSender ! EmptyFetchJob()
     }
   }
 
@@ -99,7 +99,7 @@ class FetchMasterActor extends Actor with ActorLogging {
 
       sendFetchTask(sender(), id)
 
-    case FetchFinished(link, childLinks, code, fetcherId, message) =>
+    case FetchResult(link, childLinks, code, fetcherId, message) =>
       UrlManager.removeFetching(link)
 
       if (FetchCode.isOk(code)) {

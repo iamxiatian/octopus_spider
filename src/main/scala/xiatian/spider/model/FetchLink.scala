@@ -29,9 +29,9 @@ case class FetchLink(url: String,
                      anchor: String = "",
                      depth: Int = 0,
                      retries: Byte = 0, //最大为20,超过100则为20
-                     `type`: LinkType = UnknownLink,
+                     `type`: LinkType,
                      //refreshInSeconds: Long = 86400L * 365 * 1000, //更新周期, 以秒为单位, 默认为1000年，即不再更新
-                     taskId: String = "000",
+                     taskId: String,
                      params: Map[String, String] = Map.empty[String, String]
                     ) extends FastSerializable {
 

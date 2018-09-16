@@ -4,7 +4,7 @@ import akka.actor._
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import xiatian.spider.actor.store.StoreActor
-import xiatian.spider.actor.{FetchFailure, FetchFinished, _}
+import xiatian.spider.actor.{FetchFailure, FetchResult, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -48,10 +48,10 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
       if (System.currentTimeMillis() - lastReceivedTaskTime > 300000)
         master ! NEW_REQUEST
 
-    case result: FetchTask =>
+    case result: FetchJob =>
       lastReceivedTaskTime = System.currentTimeMillis() //更新同步时间
       result match {
-        case EmptyFetchTask() =>
+        case EmptyFetchJob() =>
           print("🈳")
           emptyCount += 1
           val millis = 2000 + (emptyCount * 1000)
@@ -59,14 +59,14 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
           val delay = if (millis > 120000) 12000 else millis
           Thread.sleep(delay)
           master ! NEW_REQUEST
-        case NormalFetchTask(link, context, proxyHolder) =>
+        case NormalFetchJob(link, context, proxyHolder) =>
           log.debug(s"fetch: $link")
           print("\uD83D\uDE0A") // 取到正常任务的符号：😊
           emptyCount = 0
           //指定30秒的延迟, 设置较长的时间延迟，保证GC能够及时回收内存
           // 如果依然有问题，考虑在CrawlingActor中限制最长的运行时间
           (crawler ? Fetch(link, fetcherId, context, proxyHolder)) (60 seconds)
-            .mapTo[FetchFinished]
+            .mapTo[FetchResult]
             .recoverWith {
               case e =>
                 e.printStackTrace()

@@ -22,25 +22,25 @@ case class ProxyIp(host: String, port: Int, expiredTimeInMillis: Long) {
   */
 final case class FetchRequest(id: Int) extends FastSerializable
 
-trait FetchTask extends FastSerializable
+trait FetchJob extends FastSerializable
 
 /**
   * Master在检测到新连接的爬虫Fetcher后，会自动发回该消息，
   * 通知爬虫以后利用该消息进行通信
   */
-final case class InitFetchTask(id: String) extends FetchTask
+final case class InitFetchJob(id: String) extends FetchJob
 
-final case class EmptyFetchTask() extends FetchTask
+final case class EmptyFetchJob() extends FetchJob
 
 /**
   * 爬虫任务的上下文信息，由Master传递到Client
   */
 final case class Context() extends FastSerializable
 
-final case class NormalFetchTask(link: FetchLink,
-                                 context: Context,
-                                 proxy: Option[ProxyIp] = None
-                                ) extends FetchTask
+final case class NormalFetchJob(link: FetchLink,
+                                context: Context,
+                                proxy: Option[ProxyIp] = None
+                               ) extends FetchJob
 
 /**
   * link和fetcherId是最为基本的信息，后续的参数是为了由服务器传递到爬虫客户端，
@@ -51,11 +51,32 @@ case class Fetch(link: FetchLink,
                  context: Context,
                  proxy: Option[ProxyIp] = None) extends FastSerializable
 
-case class FetchFinished(link: FetchLink,
-                         childLinks: List[FetchLink],
-                         code: Int,
-                         fetcherId: Int,
-                         message: Option[String] = None) extends FastSerializable
+/**
+  * 网页中抽取出来的链接对象
+  *
+  * @param url    链接的URL
+  * @param anchor 链接的锚文本
+  * @param params 链接的额外参数，例如，有时需要抽取链接周边的日期存入该对象之中
+  */
+case class AnchorLink(url: String, anchor: String, params: Map[String, String])
+
+/**
+  * 对一个网页的抽取结果对象, 子链接可以用两种形式表示，即已经转换为FetchLink对象的子链接，
+  * 尚未转换为FetchLink、原始的AnchorLink形式。
+  *
+  * @param link             处理的网页链接
+  * @param childFetchLinks  该网页中抽取出来的子链接，已转换为FetchLink形式
+  * @param childAnchorLinks 该网页中抽取出来的原始AnchorLink
+  * @param code             抓取结果的代码
+  * @param fetcherId        负责抓取的爬虫代号
+  * @param message          抓取产生的信息描述文本，例如错误的时候，表示错误的内容
+  */
+case class FetchResult(fetcherId: Int,
+                       code: Int,
+                       link: FetchLink,
+                       childFetchLinks: List[FetchLink] = List.empty,
+                       childAnchorLinks: List[AnchorLink] = List.empty,
+                       message: Option[String] = None) extends FastSerializable
 
 case class FetchFailure(link: FetchLink,
                         reason: String,

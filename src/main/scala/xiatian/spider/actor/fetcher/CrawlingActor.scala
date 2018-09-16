@@ -5,8 +5,7 @@ import java.io.ByteArrayInputStream
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import xiatian.spider.actor.{Fetch, FetchCode, FetchFinished}
-import xiatian.spider.model._
+import xiatian.spider.actor.{Fetch, FetchCode, FetchResult}
 import xiatian.spider.tool.Http
 
 import scala.concurrent.Await
@@ -32,9 +31,9 @@ class CrawlingActor(storeClient: ActorRef) extends Actor with ActorLogging {
 
         if (response.getCode != 200) {
           log.error(response.toString)
-          sender() ! FetchFinished(link, List.empty, FetchCode.Error, fetcherId)
+          sender() ! FetchResult(fetcherId, FetchCode.Error, link)
         } else if (response.getContentType != "text/html") {
-          sender() ! FetchFinished(link, List.empty, FetchCode.Not_HTML, fetcherId)
+          sender() ! FetchResult(fetcherId, FetchCode.Not_HTML, link)
         } else {
           //TODO: 根据设置信息：把采集到的内容保存起来
           // pageCacheActor ! CachingPage(link.url, link.`type`, response.getContent, response.getEncoding)
@@ -49,20 +48,18 @@ class CrawlingActor(storeClient: ActorRef) extends Actor with ActorLogging {
 
           Await.result(extractor.extract(link, doc, proxyHolder), 60 seconds) match {
             case Left(msg) =>
-              sender() ! FetchFinished(link, List.empty[FetchLink],
-                FetchCode.Error, fetcherId, Some(msg))
+              sender() ! FetchResult(fetcherId, FetchCode.Error, link, message = Some(msg))
 
             case Right(result) =>
               storeClient ! result
-              sender() ! FetchFinished(link, result.childLinks, FetchCode.Ok, fetcherId)
+              sender() ! FetchResult(fetcherId, FetchCode.Ok, link, result.childLinks)
           }
         }
       } catch {
         case e: Throwable =>
           println(s"Fetch error, url: ${link.url}, error: ${e}")
           log.error(e, s"Still got fetch error: ${link}, maybe you were blocked!")
-          sender() ! FetchFinished(link, List.empty[FetchLink],
-            FetchCode.PARSE_ERROR, fetcherId, Some(e.toString))
+          sender() ! FetchResult(fetcherId, FetchCode.PARSE_ERROR, link, message = Some(e.toString))
       }
   }
 
