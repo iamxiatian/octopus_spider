@@ -99,7 +99,7 @@ class FetchMasterActor extends Actor with ActorLogging {
 
       sendFetchTask(sender(), id)
 
-    case FetchResult(link, childLinks, code, fetcherId, message) =>
+    case FetchResult(fetcherId, code, link, childLinks, anchorLinks, message) =>
       UrlManager.removeFetching(link)
 
       if (FetchCode.isOk(code)) {

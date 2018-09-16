@@ -86,19 +86,4 @@ class WaitDb(path: String) extends SortedSetDb("WaitDB", path) {
 object WaitDb extends
   WaitDb(new File(MyConf.masterDbPath, "waiting").getCanonicalPath) {
 
-  def main(args: Array[String]): Unit = {
-    println(s"first count: ${count()}")
-
-    push(FetchLink("http://www.test.com/0", None, "test0"), 188860)
-    push(FetchLink("http://www.test.com/1", None, "test1"), 10)
-    push(FetchLink("http://www.test.com/2", None, "test2"), 60)
-    push(FetchLink("http://www.test.com/3", None, "test3"), 30)
-    println(s"after insert count: ${count()}")
-
-    popCrawlLinks(10).foreach(l => println(s"OK: $l"))
-    println(s"after pop count: ${count()}")
-
-    close()
-  }
-
 }
