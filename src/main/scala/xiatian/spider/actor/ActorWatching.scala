@@ -6,7 +6,7 @@ import akka.event.LoggingAdapter
 /**
   * 带有日志处理和开始与结束提示信息的基类
   */
-trait WatchActor {
+trait ActorWatching {
   this: Actor ⇒
   private var _log: LoggingAdapter = _
 

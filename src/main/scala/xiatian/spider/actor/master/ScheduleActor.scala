@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorSystem, Cancellable}
 import org.joda.time.DateTime.now
 import xiatian.common.MyConf
 import xiatian.spider.actor.ActorMessage.Starting
-import xiatian.spider.actor.WatchActor
+import xiatian.spider.actor.ActorWatching
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -22,7 +22,7 @@ import scala.concurrent.duration._
   * @author Tian Xia
   *         May 15, 2017 22:09
   */
-class ScheduleActor(system: ActorSystem) extends Actor with WatchActor {
+class ScheduleActor(system: ActorSystem) extends Actor with ActorWatching {
   val triggerTimes = MyConf.mailTriggerTimes
 
   import ScheduleActor._

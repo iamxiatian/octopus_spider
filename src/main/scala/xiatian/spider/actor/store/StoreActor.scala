@@ -2,7 +2,7 @@ package xiatian.spider.actor.store
 
 import akka.actor.{Actor, ActorLogging}
 import com.google.common.hash.Hashing
-import xiatian.spider.actor.WatchActor
+import xiatian.spider.actor.ActorWatching
 import xiatian.spider.parse.ExtractResult
 
 import scala.util.{Failure, Success, Try}
@@ -18,7 +18,7 @@ import scala.util.{Failure, Success, Try}
   * @author Tian Xia
   *         Dec 03, 2016 23:28
   */
-class StoreActor extends Actor with WatchActor {
+class StoreActor extends Actor with ActorWatching {
   val hashAsInt = (url: String) => Hashing.sha256()
     .hashBytes(url.getBytes("utf-8"))
     .asInt().abs

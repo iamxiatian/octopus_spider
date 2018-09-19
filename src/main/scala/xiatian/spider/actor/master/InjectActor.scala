@@ -3,7 +3,7 @@ package xiatian.spider.actor.master
 import akka.actor.{Actor, ActorLogging, ActorSystem}
 import org.joda.time.DateTime
 import xiatian.spider.actor.ActorMessage.Starting
-import xiatian.spider.actor.WatchActor
+import xiatian.spider.actor.ActorWatching
 import xiatian.spider.actor.master.db.WaitDb
 import xiatian.spider.model.FetchLink
 
@@ -18,7 +18,7 @@ import scala.util.{Failure, Success}
   * @author Tian Xia
   *         Dec 05, 2016 13:41
   */
-class InjectActor(system: ActorSystem) extends Actor with WatchActor {
+class InjectActor(system: ActorSystem) extends Actor with ActorWatching {
   val EACH_INJECT_COUNT = 5100 // 每次注入的任务数量
 
   var paused = false //是否暂停注入，默认为false，表示持续注入
