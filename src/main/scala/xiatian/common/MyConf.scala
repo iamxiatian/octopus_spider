@@ -24,10 +24,15 @@ object MyConf {
   /** AkkaSystem使用的配置类，其启动时需要指定该类 */
   var akkaMasterConfig: Option[Config] = None
 
-  val zhinangConf = new Configuration()
-    .set("http.user.agent", fetcherUserAgent)
-    .setInt("http.connection.timeout", 9000)
-    .setInt("http.socket.timeout", 30000)
+
+  lazy val httpUserAgent = getString("fetcher.http.user.agent")
+  lazy val httpConnectionTimeout = getInt("fetcher.http.connection.timeout")
+  lazy val httpSocketTimeout = getInt("fetcher.http.socket.timeout")
+
+  lazy val zhinangConf = new Configuration()
+    .set("http.user.agent", httpUserAgent)
+    .setInt("http.connection.timeout", httpConnectionTimeout)
+    .setInt("http.socket.timeout", httpSocketTimeout)
     .setInt("http.proxy.port", 0) //默认不启动代理
 
   //先采用my.conf中的配置，再使用application.conf中的默认配置
@@ -124,7 +129,6 @@ object MyConf {
   lazy val apiServerPort = getInt("master.http.port")
 
   lazy val fetcherHostname = getString("fetcher.hostname")
-  lazy val fetcherUserAgent = getString("fetcher.user.agent")
   lazy val splitCollection = getBoolean("db.mongo.splitCollection")
 
   lazy val articleMustContains =
@@ -279,7 +283,9 @@ object MyConf {
        |├── fetcher config:
        |│   ├── fetcher identification ==> $fetcherId
        |│   ├── hostname ==> $fetcherHostname
-       |│   ├── userAgent ==> $fetcherUserAgent
+       |│   ├── userAgent ==> $httpUserAgent
+       |│   ├── connectionTimeout ==> $httpConnectionTimeout
+       |│   ├── socketTimeout ==> $httpSocketTimeout
        |│   ├── numOfFetchClientActors ==> ${getInt("fetcher.numOfFetchClientActors")}
        |│   └── parseDataPageLinks ==> ${getBoolean("fetcher.parseDataPageLinks")}
        |│
