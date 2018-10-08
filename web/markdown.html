@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="js/showdown.min.js"></script>
+    <script src="admin/lib/jquery.min.js"></script>
+</head>
+<body>
+<div id="container"></div>
+<script>
+    function GetQueryString(name) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+        var r = window.location.search.substr(1).match(reg);  //获取url中"?"符后的字符串并正则匹配
+        var context = "";
+        if (r != null)
+            context = r[2];
+        reg = null;
+        r = null;
+        return context == null || context == "" || context == "undefined" ? "" : context;
+    }
+
+    $(document).ready(function () {
+        var markFile = GetQueryString("f");
+
+        $.ajax({
+            url: markFile,
+            success: function (data) {
+                var converter = new showdown.Converter();
+                $("#container").html(converter.makeHtml(data));
+            },
+            error:function(xhr,status,statusText){
+                $("#container").html(xhr.status);
+            }
+        });
+    });
+</script>
+</body>
+</html>
