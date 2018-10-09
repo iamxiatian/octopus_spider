@@ -49,7 +49,7 @@ libraryDependencies += "com.typesafe" % "config" % "1.3.3"
 libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
 
 //command line parser
-libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
+libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.0"
 
 //Scala wrapper for Joda Time.
 libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "2.16.0"
@@ -65,6 +65,7 @@ libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.23"
 
 //libraryDependencies += "org.mongodb" % "mongodb-driver" % "3.6.1"
 libraryDependencies += "org.rocksdb" % "rocksdbjni" % "5.7.2"
+libraryDependencies += "org.dizitart" % "nitrite" % "3.1.0"
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.2"
 
