@@ -11,13 +11,22 @@ import xiatian.common.MyConf.zhinangConf
 import xiatian.spider.actor.ProxyIp
 import xiatian.spider.model.FetchLink
 
+import scala.collection.mutable
 import scala.concurrent.Future
 
 /**
-  * 获取网页内容的HTTP封装对象
+  * 获取网页内容的HTTP封装对象, 需要缓存支持代理的HttpClientAgent，避免每次都实例化一个
+  * HttpClientAgent对象，并尝试多次连接代理服务器，导致Connection Refused.
   */
 object Http {
   val LOG = LoggerFactory.getLogger(this.getClass)
+
+  /**
+    * 主键为代理的地址，Value为HttpClientAgent和加入的时间构成的二元组
+    * 记录时间的目的是: Remo    */
+  val clients = mutable.Map.empty[String, (HttpClientAgent, Long)]
+
+  val defaultClient = new HttpClientAgent(zhinangConf)
 
   def get(link: FetchLink,
           proxyHolder: Option[ProxyIp] = None,
@@ -31,16 +40,39 @@ object Http {
           proxyHolder: Option[ProxyIp],
           contentType: String): UrlResponse = {
 
+    if (clients.size > 100) {
+      val keys = clients.keys
+      keys.foreach {
+        key =>
+          clients.get(key).map {
+            case (client, time) =>
+              //超过1小时，则删除该缓存中的条目
+              if (time + 3600000 < System.currentTimeMillis()) {
+                clients.remove(key)
+              }
+          }
+      }
+    }
+
     val client = proxyHolder match {
       case Some(proxyIp) =>
         if (proxyIp.expired()) {
-          new HttpClientAgent(zhinangConf)
-        } else {
-          LOG.info(s"Use proxy ${proxyIp} to fetch url ${url}")
-          new HttpClientAgent(zhinangConf, proxyIp.host, proxyIp.port)
+          //移除缓存中的HttpClientAgent
+          clients.remove(proxyIp.address)
+          //new HttpClientAgent(zhinangConf)
+          defaultClient
+        } else synchronized {
+          log.info(s"Use proxy ${proxyIp} to fetch url ${url}")
+          if (clients.contains(proxyIp.address)) clients(proxyIp.address)._1
+          else {
+            val c = new HttpClientAgent(zhinangConf, proxyIp.host, proxyIp.port)
+            clients.put(proxyIp.address, (c, System.currentTimeMillis()))
+            c
+          }
         }
       case None =>
-        new HttpClientAgent(zhinangConf)
+        //new HttpClientAgent(zhinangConf)
+        defaultClient
     }
 
     //只有text/html类型的网页才会继续提取内容，填充到response对象中

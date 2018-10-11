@@ -13,6 +13,8 @@ import xiatian.spider.model.FetchLink
 
 case class ProxyIp(host: String, port: Int, expiredTimeInMillis: Long) {
   def expired(): Boolean = System.currentTimeMillis() > expiredTimeInMillis
+
+  def address: String = s"$host:$port"
 }
 
 /**
