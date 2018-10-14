@@ -92,6 +92,7 @@ object Spider extends App {
     note("\n xiatian, xia@ruc.edu.cn.")
   }
 
+  MyConf.configLog()
   MyConf.outputConfig()
 
   parser.parse(args, Config()) match {

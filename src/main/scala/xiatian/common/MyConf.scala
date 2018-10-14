@@ -1,6 +1,6 @@
 package xiatian.common
 
-import java.io.File
+import java.io.{File, FileInputStream}
 import java.util.concurrent.ConcurrentHashMap
 
 import com.typesafe.config.impl.Parseable
@@ -323,4 +323,21 @@ object MyConf {
        |""".stripMargin
   }
 
+
+  def configLog(): Unit = {
+    val f = new File("./conf/logback.xml")
+    if (f.exists()) {
+      import ch.qos.logback.classic.LoggerContext
+      import ch.qos.logback.classic.joran.JoranConfigurator
+      import org.slf4j.LoggerFactory
+      val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
+      loggerContext.reset()
+      val configurator = new JoranConfigurator
+      val configStream = new FileInputStream(f)
+      configurator.setContext(loggerContext)
+      configurator.doConfigure(configStream) // loads logback file
+      configStream.close()
+      println("finished to config logback.")
+    }
+  }
 }
