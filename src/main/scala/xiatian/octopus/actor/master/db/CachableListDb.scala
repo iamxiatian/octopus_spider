@@ -2,6 +2,7 @@ package xiatian.octopus.actor.master.db
 
 import org.rocksdb.{Options, RocksDB, RocksIterator}
 import org.zhinang.util.cache.LruCache
+import xiatian.octopus.db.Db
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

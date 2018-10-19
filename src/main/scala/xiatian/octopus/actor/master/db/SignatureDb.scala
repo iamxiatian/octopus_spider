@@ -6,6 +6,7 @@ import com.google.common.primitives.Longs
 import org.rocksdb.{Options, RocksDB}
 import org.zhinang.util.cache.LruCache
 import xiatian.octopus.common.MyConf
+import xiatian.octopus.db.Db
 import xiatian.octopus.util.HexBytesUtil
 
 import scala.util.Try

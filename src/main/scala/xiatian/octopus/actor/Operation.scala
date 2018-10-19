@@ -1,5 +1,6 @@
 package xiatian.octopus.actor
 
+import org.joda.time.DateTime
 import org.zhinang.protocol.http.UrlResponse
 import xiatian.octopus.FastSerializable
 import xiatian.octopus.model.FetchLink
@@ -15,6 +16,11 @@ case class ProxyIp(host: String, port: Int, expiredTimeInMillis: Long) {
   def expired(): Boolean = System.currentTimeMillis() > expiredTimeInMillis
 
   def address: String = s"$host:$port"
+
+  override def toString(): String ={
+    val d = new DateTime(expiredTimeInMillis).toString("MM-dd HH:mm:ss")
+    s"$host:$port(expired at $d)"
+  }
 }
 
 /**

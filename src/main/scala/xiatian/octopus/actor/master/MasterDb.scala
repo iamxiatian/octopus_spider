@@ -1,6 +1,7 @@
 package xiatian.octopus.actor.master
 
 import xiatian.octopus.actor.master.db._
+import xiatian.octopus.db.Db
 
 /**
   * FetchMaster用到的数据库

@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
+import xiatian.octopus.db.{Db, QueueMapDb}
 import xiatian.octopus.model.{FetchLink, FetchTask, LinkType}
 
 import scala.util.{Failure, Success, Try}

@@ -1,4 +1,4 @@
-package xiatian.octopus.actor.master.db
+package xiatian.octopus.db
 
 import scala.util.Try
 

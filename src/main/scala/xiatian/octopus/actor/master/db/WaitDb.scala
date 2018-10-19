@@ -4,6 +4,7 @@ import java.io.File
 
 import org.joda.time.DateTime
 import xiatian.octopus.common.MyConf
+import xiatian.octopus.db.{ScoreUpdate, SortedSetDb}
 import xiatian.octopus.model.{FetchLink, FetchTask}
 import xiatian.octopus.util.{HashUtil, HexBytesUtil}
 

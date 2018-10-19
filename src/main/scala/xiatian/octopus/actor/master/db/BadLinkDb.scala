@@ -10,6 +10,7 @@ import org.rocksdb._
 import org.zhinang.util.cache.LruCache
 import xiatian.octopus.actor.master.db.BadLinkType.BadLinkType
 import xiatian.octopus.common.MyConf
+import xiatian.octopus.db.Db
 
 import scala.util.Try
 

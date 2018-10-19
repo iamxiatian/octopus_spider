@@ -4,6 +4,7 @@ import java.io._
 
 import org.joda.time.DateTime
 import xiatian.octopus.common.MyConf
+import xiatian.octopus.db.QueueListDb
 
 import scala.concurrent.Future
 

@@ -1,4 +1,4 @@
-package xiatian.octopus.actor.master.db
+package xiatian.octopus.db
 
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.Arrays
@@ -8,7 +8,7 @@ import com.google.common.collect.Lists
 import com.google.common.primitives.Longs
 import org.rocksdb._
 import org.slf4j.LoggerFactory
-import xiatian.octopus.actor.master.db.ScoreUpdate.{ALWAYS, GT_OLD, LT_OLD, NEVER}
+import xiatian.octopus.db.ScoreUpdate.{ALWAYS, GT_OLD, LT_OLD, NEVER}
 
 import scala.util.Try
 
@@ -67,14 +67,6 @@ class SortedSetDb(dbName: String, //数据库的别名，方便调试和日志�
       new AtomicLong(if (n >= 0) n else 0)
     }
   }
-
-  /**
-    * 把key的数量保存到数据库中
-    */
-  private def saveKeyCounter() = db.put(metaHandler,
-    "counter".getBytes(UTF_8),
-    Longs.toByteArray(keyCounter.longValue())
-  )
 
   /**
     * 更新主键对应的分值
@@ -155,21 +147,6 @@ class SortedSetDb(dbName: String, //数据库的别名，方便调试和日志�
     }
   }
 
-  def remove(key: Array[Byte]): Unit = {
-    //先查看原先的key是否已经在排序队列中了。
-    val scoreArray: Array[Byte] = db.get(keyScoreHandler, key)
-    if (scoreArray != null) {
-      //删除原先的score_sort列中的对应元素
-      val scoreSortKey = scoreArray ++ key
-      db.delete(scoreSortHandler, scoreSortKey)
-
-      keyCounter.decrementAndGet()
-    }
-
-    // 删除keyScore列
-    db.delete(keyScoreHandler, key)
-  }
-
   /**
     * 返回该key对应的内容和score二元组
     *
@@ -233,6 +210,21 @@ class SortedSetDb(dbName: String, //数据库的别名，方便调试和日志�
     if (rm) result.foreach { case (key, _, _) => remove(key) }
 
     result
+  }
+
+  def remove(key: Array[Byte]): Unit = {
+    //先查看原先的key是否已经在排序队列中了。
+    val scoreArray: Array[Byte] = db.get(keyScoreHandler, key)
+    if (scoreArray != null) {
+      //删除原先的score_sort列中的对应元素
+      val scoreSortKey = scoreArray ++ key
+      db.delete(scoreSortHandler, scoreSortKey)
+
+      keyCounter.decrementAndGet()
+    }
+
+    // 删除keyScore列
+    db.delete(keyScoreHandler, key)
   }
 
   /**
@@ -303,6 +295,14 @@ class SortedSetDb(dbName: String, //数据库的别名，方便调试和日志�
     options.close()
     println(s"\t [$dbName CLOSED]\n")
   }
+
+  /**
+    * 把key的数量保存到数据库中
+    */
+  private def saveKeyCounter() = db.put(metaHandler,
+    "counter".getBytes(UTF_8),
+    Longs.toByteArray(keyCounter.longValue())
+  )
 
   /**
     * 修复数据

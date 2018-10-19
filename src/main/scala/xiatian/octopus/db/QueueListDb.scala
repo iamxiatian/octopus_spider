@@ -1,4 +1,4 @@
-package xiatian.octopus.actor.master.db
+package xiatian.octopus.db
 
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicInteger
@@ -25,9 +25,9 @@ import scala.util.Try
   * @param path
   * @param capacity 队列的容量
   */
-abstract class QueueListDb(path: String,
-                           capacity: Int = 100000000
-                          ) extends Db {
+class QueueListDb(path: String,
+                  capacity: Int = 100000000
+                 ) extends Db {
   RocksDB.loadLibrary()
 
   private val options = new Options().setCreateIfMissing(true)
