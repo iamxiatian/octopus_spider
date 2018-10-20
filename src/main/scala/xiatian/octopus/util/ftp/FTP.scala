@@ -9,17 +9,6 @@ import scala.io.Source.fromInputStream
 import scala.util.Try
 
 final class FTP(val client: FTPClient) {
-  def login(username: String, password: String): Try[Boolean] = Try {
-    client.login(username, password)
-  }
-
-  def connect(host: String, port: Int): Try[Unit] = Try {
-    client.connect(host, port)
-    client.enterLocalPassiveMode()
-  }
-
-  def connected: Boolean = client.isConnected
-
   def disconnect(): Unit = client.disconnect()
 
   def canConnect(host: String): Boolean = {
@@ -29,10 +18,7 @@ final class FTP(val client: FTPClient) {
     connectionWasEstablished
   }
 
-  def listFiles(dir: Option[String]): Array[FTPFile] = dir match {
-    case Some(d) => client.listFiles(d)
-    case None => client.listFiles
-  }
+  def connected: Boolean = client.isConnected
 
   def connectWithAuth(host: String,
                       port: Int = 21,
@@ -44,14 +30,28 @@ final class FTP(val client: FTPClient) {
     } yield login
   }
 
-  def extractNames(f: Option[String] => Array[FTPFile]) =
-    f(None).map(_.getName).toSeq
+  def login(username: String, password: String): Try[Boolean] = Try {
+    client.login(username, password)
+  }
+
+  def connect(host: String, port: Int): Try[Unit] = Try {
+    client.connect(host, port)
+    client.enterLocalPassiveMode()
+  }
 
   def cd(path: String): Boolean =
     client.changeWorkingDirectory(path)
 
   def filesInCurrentDirectory: Seq[String] =
     extractNames(listFiles)
+
+  def listFiles(dir: Option[String]): Array[FTPFile] = dir match {
+    case Some(d) => client.listFiles(d)
+    case None => client.listFiles
+  }
+
+  def extractNames(f: Option[String] => Array[FTPFile]) =
+    f(None).map(_.getName).toSeq
 
   def downloadFileStream(remote: String): InputStream = {
     client.setFileType(BINARY_FILE_TYPE)

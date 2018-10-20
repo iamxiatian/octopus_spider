@@ -70,6 +70,11 @@ object FetchTask {
 
   def count(): Int = 0
 
+  def get(link: FetchLink): Option[FetchTask] = get(link.taskId).orElse {
+    LOG.warn(s"invalid task id ${link.taskId}, url=>${link.url}")
+    None
+  }
+
   def get(taskId: String): Option[FetchTask] = {
     taskId match {
       //case AmazonBookTask.id => Some(AmazonBookTask)
@@ -77,11 +82,6 @@ object FetchTask {
         LOG.error(s"task $taskId does not exist.")
         None
     }
-  }
-
-  def get(link: FetchLink): Option[FetchTask] = get(link.taskId).orElse {
-    LOG.warn(s"invalid task id ${link.taskId}, url=>${link.url}")
-    None
   }
 }
 

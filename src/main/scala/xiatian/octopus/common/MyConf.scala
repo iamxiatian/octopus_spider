@@ -19,22 +19,14 @@ import scala.io.Source
   *         Dec 02, 2016 13:20
   */
 object MyConf {
-  val version = BuildInfo.version
-
-  /** AkkaSystem使用的配置类，其启动时需要指定该类 */
-  var akkaMasterConfig: Option[Config] = None
-
-
   lazy val httpUserAgent = getString("fetcher.http.user.agent")
   lazy val httpConnectionTimeout = getInt("fetcher.http.connection.timeout")
   lazy val httpSocketTimeout = getInt("fetcher.http.socket.timeout")
-
   lazy val zhinangConf = new Configuration()
     .set("http.user.agent", httpUserAgent)
     .setInt("http.connection.timeout", httpConnectionTimeout)
     .setInt("http.socket.timeout", httpSocketTimeout)
     .setInt("http.proxy.port", 0) //默认不启动代理
-
   //先采用my.conf中的配置，再使用application.conf中的默认配置
   lazy val config: Config = {
     val confFile = new File("./conf/my.conf")
@@ -52,20 +44,12 @@ object MyConf {
       ConfigFactory.load()
     }
   }
-
-  /**
-    * 最大保留的时间值，以秒为单位；例如，抓取时间超过该数值的链接将会抛弃掉
-    */
-  val MaxTimeSeconds = DateTime.parse("2999-01-01").getMillis / 1000
-
-
   //文章链接的停用词，如果文章锚文本与其中的词语相同，则过滤掉该链接
   lazy val articleStopWords: Set[String] =
     Source.fromFile(
       "conf/stopwords4article.txt",
       "utf-8"
     ).getLines().filter(!_.trim.isEmpty).toSet
-
   //根据域名进行限速的Map，主键为域名，值为以秒为单位的时间间隔
   lazy val speedControlMap = {
     def isNumeric(maybeNumeric: String): Boolean =
@@ -99,48 +83,29 @@ object MyConf {
 
     map
   }
-
-  def getString(path: String) = config.getString(path)
-
-  def getString(path: String, defaultValue: String) =
-    if (config.hasPath(path)) config.getString(path) else defaultValue
-
-  def getInt(path: String) = config.getInt(path)
-
-  def getBoolean(path: String) = config.getBoolean(path)
-
   //采集结果保存到的数据库类型
   lazy val dbTypes = getString("db.type").split(",").map(_.trim.toLowerCase).toSet
   lazy val mongoUrl = getString("db.mongo.url")
   lazy val mongoDbName = getString("db.mongo.dbName")
-
   lazy val elasticSearchHttpUrl = getString("db.elasticSearch.http.url")
   lazy val masterHostname = getString("master.hostname")
   lazy val masterPort = getInt("master.port")
   lazy val masterRobinCount = getInt("master.robinCount")
   lazy val masterDbPath = new File(getString("master.db.path"))
-  masterDbPath.mkdirs()
-
   lazy val masterDbCacheSize = getInt("master.db.cacheSize")
-
   lazy val maxLinkDepth = getInt("master.link.max.depth")
   lazy val maxLinkRetries = getInt("master.link.max.retries")
-
   lazy val apiServerPort = getInt("master.http.port")
-
   lazy val fetcherHostname = getString("fetcher.hostname")
   lazy val splitCollection = getBoolean("db.mongo.splitCollection")
-
   lazy val articleMustContains =
     if (config.hasPath("article.mustContainsRegex")) {
       val regex = getString("article.mustContainsRegex")
       if (regex == "") None else Some(regex.r)
     } else None
-
+  masterDbPath.mkdirs()
   lazy val articleCheckDuplicate = getBoolean("article.checkDuplicate")
-
   lazy val saveHtmlFormat = getBoolean("article.saveHtmlFormat")
-
   /**
     * 返回触发的时间点（每一个时间点都是一对整数： (小时, 分钟)）
     */
@@ -152,46 +117,38 @@ object MyConf {
           val parts = t.split(":").map(_ toInt)
           (parts(0), parts(1))
       }.toList
-
   lazy val mailNotify = getBoolean("scheduler.mail.notify") //是否启用邮件通知
-
-  /**
-    * 获取爬虫的标记名称
-    */
-  val fetcherId: String = Machine.getLocalIp.getOrElse("127.0.0.1")
-
-  //作品每次注入的时间间隔
-  val workInjectInterval = getInt("book.work.inject.interval")
-  //val workSyncInterval = getInt("book.work.sync.interval")
-
   // 作者头像目录
   lazy val avatarAuthorDir = new File(getString("book.avatar.author.dir"))
-
   // Bing学术搜索的入口
   lazy val bingAcademicPoint = getString("book.bing.academic.point")
   lazy val amazonSearchPoint = getString("book.amazon.search.point")
-
   //存放图书的位置
   lazy val bookFtpHost = MyConf.getString("book.ftp.host")
   lazy val bookFtpPort = MyConf.getInt("book.ftp.port")
   lazy val bookFtpUser = MyConf.getString("book.ftp.user")
   lazy val bookFtpPassword = MyConf.getString("book.ftp.password")
   lazy val bookFtpPrefix = MyConf.getString("book.ftp.prefix")
-
-
   //CoreNLPs所在的计算机地址
   lazy val nlpServerHost = {
     val host = getString("nlp.stanford.host")
     if (!host.toLowerCase().startsWith("http")) s"http://$host" else host
   }
+  //val workSyncInterval = getInt("book.work.sync.interval")
   lazy val nlpServerPort = getInt("nlp.stanford.port")
   lazy val nlpAnnotators = getString("nlp.stanford.annotators")
-
   lazy val opennlpModelDir = new File(getString("nlp.apache.model.dir"))
-
-  def outputConfig() = println(screenConfigText)
-
-
+  val version = BuildInfo.version
+  /**
+    * 最大保留的时间值，以秒为单位；例如，抓取时间超过该数值的链接将会抛弃掉
+    */
+  val MaxTimeSeconds = DateTime.parse("2999-01-01").getMillis / 1000
+  /**
+    * 获取爬虫的标记名称
+    */
+  val fetcherId: String = Machine.getLocalIp.getOrElse("127.0.0.1")
+  //作品每次注入的时间间隔
+  val workInjectInterval = getInt("book.work.inject.interval")
   val screenConfigText: String = {
     val mysqlConfigLines =
       if (dbTypes.contains("mysql"))
@@ -322,7 +279,19 @@ object MyConf {
        |
        |""".stripMargin
   }
+  /** AkkaSystem使用的配置类，其启动时需要指定该类 */
+  var akkaMasterConfig: Option[Config] = None
 
+  def getString(path: String) = config.getString(path)
+
+  def getString(path: String, defaultValue: String) =
+    if (config.hasPath(path)) config.getString(path) else defaultValue
+
+  def getInt(path: String) = config.getInt(path)
+
+  def getBoolean(path: String) = config.getBoolean(path)
+
+  def outputConfig() = println(screenConfigText)
 
   def configLog(): Unit = {
     val f = new File("./conf/logback.xml")

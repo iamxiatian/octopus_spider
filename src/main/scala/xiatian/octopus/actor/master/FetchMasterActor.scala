@@ -2,15 +2,17 @@ package xiatian.octopus.actor.master
 
 import java.text.SimpleDateFormat
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.SupervisorStrategy.{Restart, Resume}
+import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy}
 import akka.remote.{AssociatedEvent, AssociationErrorEvent, AssociationEvent, DisassociatedEvent}
-import xiatian.octopus.actor.master.db.{FetchLogDb, WaitDb}
 import xiatian.octopus.actor.{EmptyFetchJob, FetchCode, FetchFailure, FetchRequest, FetchResult, FetchStatsReply, FetchStatsRequest, NormalFetchJob, ProxyIp}
 import xiatian.octopus.common.MyConf
 import xiatian.octopus.model.FetchTask
+import xiatian.octopus.storage.master.{FetchLogDb, WaitDb}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 
 /**
@@ -24,25 +26,6 @@ class FetchMasterActor extends Actor with ActorLogging {
   import MasterVariable._
 
   log.warning("Start fetch master actor...")
-
-  val startTime = System.currentTimeMillis()
-  val dayFormat = new SimpleDateFormat("yyyMMdd HH:mm:ss")
-  val startTimeMsg = dayFormat.format(startTime) //开始时间提示
-
-  override def preStart: Unit = {
-    context.system.eventStream.subscribe(self, classOf[AssociationEvent])
-    context.system.eventStream.subscribe(self, classOf[AssociationErrorEvent])
-  }
-
-  override def postStop(): Unit = {
-    log.warning("Shutdown FetchMaster...")
-  }
-
-
-  import akka.actor.OneForOneStrategy
-  import akka.actor.SupervisorStrategy._
-
-  import scala.concurrent.duration._
 
   override val supervisorStrategy =
     OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
@@ -66,34 +49,17 @@ class FetchMasterActor extends Actor with ActorLogging {
         Restart
       //Escalate
     }
+  val startTime = System.currentTimeMillis()
+  val dayFormat = new SimpleDateFormat("yyyMMdd HH:mm:ss")
+  val startTimeMsg = dayFormat.format(startTime) //开始时间提示
 
-  def sendFetchTask(currentSender: ActorRef, fetcherId: Int) = {
-    //爬虫的主机地址
-    val fetcherHost = sender().path.address.host.getOrElse("127.0.0.1")
+  override def preStart: Unit = {
+    context.system.eventStream.subscribe(self, classOf[AssociationEvent])
+    context.system.eventStream.subscribe(self, classOf[AssociationErrorEvent])
+  }
 
-    BucketController.getFetchLink(fetcherHost, fetcherId) match {
-      case Some(link) =>
-        FetchTask.context(link.taskId) match {
-          case Some(context) =>
-            //把当前链接标记为正在抓取，且不在桶中
-            UrlManager.markFetching(link)
-
-            val proxyHolder: Option[ProxyIp] = ProxyIpPool.take()
-            currentSender ! NormalFetchJob(link, context, proxyHolder)
-
-            log.info(s"send ${link.url} to fetcher ${fetcherId}")
-
-            //把当前链接标记为正在抓取，且不在桶中
-            BucketController.removeFromBucket(link)
-
-          case None =>
-            log.warning(s"Can NOT find board context: " +
-              s"code=> ${link.taskId}, url=> ${link.url}")
-            currentSender ! EmptyFetchJob()
-        }
-      case None =>
-        currentSender ! EmptyFetchJob()
-    }
+  override def postStop(): Unit = {
+    log.warning("Shutdown FetchMaster...")
   }
 
   override def receive: Receive = {
@@ -238,6 +204,35 @@ class FetchMasterActor extends Actor with ActorLogging {
 
       //并不是等待LinkCenter.report()成功后才传递回消息，以提高响应速度
       sender() ! FetchStatsReply("TODO")
+  }
+
+  def sendFetchTask(currentSender: ActorRef, fetcherId: Int) = {
+    //爬虫的主机地址
+    val fetcherHost = sender().path.address.host.getOrElse("127.0.0.1")
+
+    BucketController.getFetchLink(fetcherHost, fetcherId) match {
+      case Some(link) =>
+        FetchTask.context(link.taskId) match {
+          case Some(context) =>
+            //把当前链接标记为正在抓取，且不在桶中
+            UrlManager.markFetching(link)
+
+            val proxyHolder: Option[ProxyIp] = ProxyIpPool.take()
+            currentSender ! NormalFetchJob(link, context, proxyHolder)
+
+            log.info(s"send ${link.url} to fetcher ${fetcherId}")
+
+            //把当前链接标记为正在抓取，且不在桶中
+            BucketController.removeFromBucket(link)
+
+          case None =>
+            log.warning(s"Can NOT find board context: " +
+              s"code=> ${link.taskId}, url=> ${link.url}")
+            currentSender ! EmptyFetchJob()
+        }
+      case None =>
+        currentSender ! EmptyFetchJob()
+    }
   }
 
 }

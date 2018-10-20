@@ -1,4 +1,4 @@
-package xiatian.octopus.db
+package xiatian.octopus.storage
 
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicInteger
@@ -43,14 +43,8 @@ class QueueMapDb(path: String,
 
   private val defaultHandler = cfHandlers.get(0)
   private val metaHandler = cfHandlers.get(1)
-
-  override def open() = {
-    println(s"Successfully open db $path")
-  }
-
   private val FRONT_KEY = "#FRONT".getBytes(StandardCharsets.UTF_8)
   private val REAR_KEY = "#REAR".getBytes(StandardCharsets.UTF_8)
-
   // Next Emputy Position
   private val front = {
     val value = db.get(metaHandler, FRONT_KEY)
@@ -59,7 +53,6 @@ class QueueMapDb(path: String,
     else
       new AtomicInteger(Ints.fromByteArray(value))
   }
-
   // Next Full Position
   private val rear = {
     val value = db.get(metaHandler, REAR_KEY)
@@ -67,6 +60,10 @@ class QueueMapDb(path: String,
       new AtomicInteger(0)
     else
       new AtomicInteger(Ints.fromByteArray(value))
+  }
+
+  override def open() = {
+    println(s"Successfully open db $path")
   }
 
   /**
@@ -88,6 +85,8 @@ class QueueMapDb(path: String,
       }
     }
   }
+
+  def full() = (front.intValue() + 1) % capacity == rear.intValue()
 
   def frontPosition() = front.get()
 
@@ -133,6 +132,8 @@ class QueueMapDb(path: String,
     }
   }
 
+  def empty() = front.intValue() == rear.intValue()
+
   /**
     * 首部出队列的元素，重新归还到首部
     */
@@ -158,10 +159,6 @@ class QueueMapDb(path: String,
       }
     }
   }
-
-  def empty() = front.intValue() == rear.intValue()
-
-  def full() = (front.intValue() + 1) % capacity == rear.intValue()
 
   def close() = {
     cfHandlers.forEach(_.close)

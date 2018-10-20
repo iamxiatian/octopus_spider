@@ -1,11 +1,11 @@
-package xiatian.octopus.actor.master.db
+package xiatian.octopus.storage.master
 
 import java.io.File
 
 import org.joda.time.DateTime
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.db.{ScoreUpdate, SortedSetDb}
 import xiatian.octopus.model.{FetchLink, FetchTask}
+import xiatian.octopus.storage.{ScoreUpdate, SortedSetDb}
 import xiatian.octopus.util.{HashUtil, HexBytesUtil}
 
 /**
@@ -16,7 +16,7 @@ import xiatian.octopus.util.{HashUtil, HexBytesUtil}
   * @param path
   */
 class WaitDb(path: String) extends SortedSetDb("WaitDB", path) {
-  
+
   /**
     * 把链接link压入到等待队列中，自动根据重试次数和刷新间隔计算下次抓取时间.
     * 实际刷新间隔采用了基于重试次数的二进制指数退避算法

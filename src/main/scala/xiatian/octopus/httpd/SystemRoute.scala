@@ -6,9 +6,9 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import org.slf4j.LoggerFactory
-import xiatian.octopus.actor.{FetchStatsReply, FetchStatsRequest}
 import xiatian.octopus.actor.SpiderSystem.Master
 import xiatian.octopus.actor.master.{BucketController, UrlManager}
+import xiatian.octopus.actor.{FetchStatsReply, FetchStatsRequest}
 import xiatian.octopus.httpd.HttpServer.settings
 
 /**

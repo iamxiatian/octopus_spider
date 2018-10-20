@@ -25,43 +25,21 @@ import scala.util.Random
   */
 object BucketController extends MasterConfig {
   val log = LoggerFactory.getLogger("BucketController")
-
-  var IS_STOPPING = false //是否正在终止程序,如果是，则不再注入链接或者提供链接抓取
-
   val picker: BucketPicker = SimplePicker
-//    if (MyConf.getString("master.bucket.picker", "simple") == "advanced")
-//      AdvancedPicker
-//    else
-//      SimplePicker
-
   /**
     * Master维持的桶对象，每个桶里面存放了一定数量的抓取链接，
     */
   val buckets: Seq[Bucket] = (0 until numberOfBuckets).map(idx => new Bucket(idx, maxBucketSize))
-
-  /**
-    * 获取指定爬虫的链接任务所在的桶队列, 如果爬虫所对应的桶没有要抓取的链接，
-    * 则自动采用第一个拥有链接的桶
-    *
-    * @param fetcherId
-    * @return
-    */
-  private def getFetcherBucket(fetcherId: Int): Bucket = {
-    val best = buckets(fetcherId % numberOfBuckets)
-    if (best.isEmpty) {
-      //取到第一个有数据的任务
-      val candidate = buckets.dropWhile(c => c.isEmpty).headOption
-      if (candidate.isEmpty) best else candidate.get
-    } else best
-  }
-
+  //    if (MyConf.getString("master.bucket.picker", "simple") == "advanced")
+  //      AdvancedPicker
+  //    else
+  //      SimplePicker
   /**
     * 控制抓取速度的Map，主键为爬虫的主机地址+任务的频道ID，值为以毫秒为单位的最近更新时间戳
     * 值为最近一次下发该频道任务的时间
     * 只有当频道的reqTimeInterval设置大于0时，才起作用。
     */
   val boardSpeedMillisRequestMap = new ConcurrentHashMap[String, Long]()
-
   /**
     * 控制抓取速度，该Map中维持了频道ID和reqTimeInterval的对应关系,
     * 该Map主键和值的对应数值，在FetchMasterActor获取链接的上下文Context对象时，
@@ -69,11 +47,17 @@ object BucketController extends MasterConfig {
     * Map中的主键为频道ID，值为以秒为单位的时间间隔
     */
   val boardSpeedControlMap = new ConcurrentHashMap[String, Int]()
-
   /**
     * 控制抓取速度的Map，主键为主机地址，值为最近一次下发该频道任务的时间
     */
   val domainSpeedMillisRequestMap = new ConcurrentHashMap[String, Long]()
+  /**
+    * 桶中拥有的URL哈希值,记录了URL哈希值和
+    */
+  val urlHashes = new ConcurrentHashMap[Long, Long]()
+  val fiveHours: Long = 1000L * 60 * 60 * 5
+  var IS_STOPPING = false //是否正在终止程序,如果是，则不再注入链接或者提供链接抓取
+  var lastFillTime = System.currentTimeMillis()
 
   /**
     * 获取一个抓取任务，策略如下：
@@ -152,9 +136,20 @@ object BucketController extends MasterConfig {
     }
 
   /**
-    * 获取所有桶内的指定类型的链接数量
+    * 获取指定爬虫的链接任务所在的桶队列, 如果爬虫所对应的桶没有要抓取的链接，
+    * 则自动采用第一个拥有链接的桶
+    *
+    * @param fetcherId
+    * @return
     */
-  def totalLinkCount(t: LinkType): Int = buckets.map(_.count(t)).sum
+  private def getFetcherBucket(fetcherId: Int): Bucket = {
+    val best = buckets(fetcherId % numberOfBuckets)
+    if (best.isEmpty) {
+      //取到第一个有数据的任务
+      val candidate = buckets.dropWhile(c => c.isEmpty).headOption
+      if (candidate.isEmpty) best else candidate.get
+    } else best
+  }
 
   /**
     * 获取所有桶内的所有链接的数量
@@ -204,8 +199,26 @@ object BucketController extends MasterConfig {
       }
     }
 
+  def markInBucket(link: FetchLink) =
+    urlHashes.put(hashLong(link.url), System.currentTimeMillis())
 
-  var lastFillTime = System.currentTimeMillis()
+  def hashLong(s: String) = HashUtil.hashAsLong(s)
+
+  def inBucket(link: FetchLink) = {
+    val key = hashLong(link.url)
+    if (urlHashes.containsKey(key)) {
+      val lastTimeMillis: Long = urlHashes.getOrDefault(key, 0L)
+      //如果当前时间比上次时间小于100分钟，则返回在桶内，
+      if ((System.currentTimeMillis() - lastTimeMillis) < fiveHours) {
+        true
+      } else {
+        //否则，当过期处理, 返回不在桶内
+        log.debug(s"Bucket hash key expired for ${link.url}")
+        urlHashes.remove(key)
+        false
+      }
+    } else false
+  }
 
   /**
     * 向桶中注入链接，返回注入的不同类型的链接的名称和数量, List中的每一个数字对应于LinkType.all
@@ -238,6 +251,11 @@ object BucketController extends MasterConfig {
   }
 
   /**
+    * 获取所有桶内的指定类型的链接数量
+    */
+  def totalLinkCount(t: LinkType): Int = buckets.map(_.count(t)).sum
+
+  /**
     * 把num个链接向桶里面填充, 返回填充成功的数量
     */
   private def fillBuckets(t: LinkType, num: Int): Int
@@ -267,34 +285,6 @@ object BucketController extends MasterConfig {
             0
           }
       }.sum
-
-  /**
-    * 桶中拥有的URL哈希值,记录了URL哈希值和
-    */
-  val urlHashes = new ConcurrentHashMap[Long, Long]()
-
-  def hashLong(s: String) = HashUtil.hashAsLong(s)
-
-  def markInBucket(link: FetchLink) =
-    urlHashes.put(hashLong(link.url), System.currentTimeMillis())
-
-  val fiveHours: Long = 1000L * 60 * 60 * 5
-
-  def inBucket(link: FetchLink) = {
-    val key = hashLong(link.url)
-    if (urlHashes.containsKey(key)) {
-      val lastTimeMillis: Long = urlHashes.getOrDefault(key, 0L)
-      //如果当前时间比上次时间小于100分钟，则返回在桶内，
-      if ((System.currentTimeMillis() - lastTimeMillis) < fiveHours) {
-        true
-      } else {
-        //否则，当过期处理, 返回不在桶内
-        log.debug(s"Bucket hash key expired for ${link.url}")
-        urlHashes.remove(key)
-        false
-      }
-    } else false
-  }
 
   def removeFromBucket(link: FetchLink) =
     urlHashes.remove(hashLong(link.url))

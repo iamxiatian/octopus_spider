@@ -8,9 +8,9 @@ import io.circe.syntax._
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import xiatian.octopus.actor.master.BucketController
-import xiatian.octopus.actor.master.db.WaitDb
 import xiatian.octopus.httpd.HttpServer.settings
 import xiatian.octopus.model.LinkType
+import xiatian.octopus.storage.master.WaitDb
 
 import scala.collection.JavaConverters._
 
@@ -23,6 +23,8 @@ import scala.collection.JavaConverters._
   */
 object SpiderRoute extends JsonSupport {
   val log = LoggerFactory.getLogger("BucketRoute")
+
+  def route: Route = bucketRoute ~ waitUrlRoute ~ promoteWaitUrls
 
   /**
     * 查看桶内数据的路由
@@ -57,7 +59,6 @@ object SpiderRoute extends JsonSupport {
 
       writeJsonOk(items.asJson)
     }
-
 
   private def waitUrlRoute: Route =
     (path("api" / "spider" / "wait" / "list.json") & get & cors(settings)) {
@@ -103,7 +104,5 @@ object SpiderRoute extends JsonSupport {
           }
       }
     }
-
-  def route: Route = bucketRoute ~ waitUrlRoute ~ promoteWaitUrls
 }
 

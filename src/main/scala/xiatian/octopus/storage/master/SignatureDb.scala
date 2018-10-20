@@ -1,4 +1,4 @@
-package xiatian.octopus.actor.master.db
+package xiatian.octopus.storage.master
 
 import java.io.File
 
@@ -6,39 +6,47 @@ import com.google.common.primitives.Longs
 import org.rocksdb.{Options, RocksDB}
 import org.zhinang.util.cache.LruCache
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.db.Db
+import xiatian.octopus.storage.Db
 import xiatian.octopus.util.HexBytesUtil
 
 import scala.util.Try
 
 /**
-  * URL的签名库，通过签名记录已经采集过的特定*
+  * URL的签名库，通过签名记录已经采集过的特定
   *
-  * @param path      书库库的保存路径
+  * @param name      签名数据库的名称
+  * @param dbPath    数据库的保存路径
   * @param cacheSize 缓存大小
   */
-class SignatureDb(path: String,
-                  cacheSize: Int) extends Db {
+private[master] class SignatureDb(name: String,
+                                  dbPath: File,
+                                  cacheSize: Int) extends Db {
   RocksDB.loadLibrary()
 
-  private val options = new Options().setCreateIfMissing(true)
-  private val db = RocksDB.open(options, path)
-
-  def numKeys() = db.getLongProperty("rocksdb.estimate-num-keys")
-
-  def open() = {
-    println(s"Signature db opened (${numKeys()} keys)")
+  if (!dbPath.exists()) {
+    val created = dbPath.getParentFile.mkdirs()
+    if (!created) {
+      println(s"创建数据库目录失败！ ==> ${dbPath.getCanonicalPath}")
+    }
   }
 
+  private val options = new Options().setCreateIfMissing(true)
+  private val db = RocksDB.open(options, dbPath.getCanonicalPath)
   /**
     * 数据库中有的数据的缓存
     */
   private val hitCache = new LruCache[String, Long](cacheSize)
-
   /**
     * 数据库中不存在数据的缓存，避免每次都进一步判断数据库是否有
     */
   private val notHitCache = new LruCache[String, Long](cacheSize)
+
+  def open() = {
+    println(s"open signature db $name at path ${dbPath.getCanonicalPath}" +
+      s" (keys: ${numKeys()})")
+  }
+
+  def numKeys() = db.getLongProperty("rocksdb.estimate-num-keys")
 
   /**
     * 把Hash保存到数据库中
@@ -52,12 +60,18 @@ class SignatureDb(path: String,
     hitCache.put(hex, time)
   }
 
-
-  def remove(hash: Array[Byte]): Unit = {
+  /**
+    * 库里面是否保存有该Hash
+    *
+    */
+  def has(hash: Array[Byte]): Boolean = {
     val hex = HexBytesUtil.bytes2hex(hash)
-    hitCache.remove(hex)
-    notHitCache.put(hex, System.currentTimeMillis())
-    db.delete(hash)
+
+    if (hitCache.containsKey(hex))
+      true
+    else if (notHitCache.containsKey(hex))
+      false
+    else getFromDb(hash).nonEmpty
   }
 
   private def getFromDb(hash: Array[Byte]): Option[Long] = {
@@ -75,20 +89,6 @@ class SignatureDb(path: String,
 
       Some(time)
     }
-  }
-
-  /**
-    * 库里面是否保存有该Hash
-    *
-    */
-  def has(hash: Array[Byte]): Boolean = {
-    val hex = HexBytesUtil.bytes2hex(hash)
-
-    if (hitCache.containsKey(hex))
-      true
-    else if (notHitCache.containsKey(hex))
-      false
-    else getFromDb(hash).nonEmpty
   }
 
   /**
@@ -127,10 +127,17 @@ class SignatureDb(path: String,
     }
   }
 
+  def remove(hash: Array[Byte]): Unit = {
+    val hex = HexBytesUtil.bytes2hex(hash)
+    hitCache.remove(hex)
+    notHitCache.put(hex, System.currentTimeMillis())
+    db.delete(hash)
+  }
+
   def close() = {
-    println(s"  ---Close database--- \n\t $path ...")
+    print(s"\tclose signature db $name at ${dbPath.getCanonicalPath}...")
     db.close()
-    println("  ---DONE---")
+    println("DONE")
   }
 
   override def clear: Try[Unit] = Try {
@@ -144,31 +151,22 @@ class SignatureDb(path: String,
   }
 }
 
-object SignatureDb extends Db {
-  //创建数据库目录
-  private val signaturePath = new File(MyConf.masterDbPath, "signature")
-  signaturePath.mkdirs()
+/**
+  * 已经抓取的链接数据库签名
+  */
+object FetchedSignatureDb extends SignatureDb(
+  "Fetched Signature Database",
+  new File(MyConf.masterDbPath, "fetched/signature"),
+  MyConf.masterDbCacheSize) {
 
-  private val fetchedPath = new File(signaturePath, "fetched").getCanonicalPath
+}
 
-  private val fetchingPath = new File(signaturePath, "fetching").getCanonicalPath
-
-  private val cacheSize = MyConf.masterDbCacheSize
-  val fetchedDb = new SignatureDb(fetchedPath, cacheSize)
-  val fetchingDb = new SignatureDb(fetchingPath, 2000)
-
-  def open() = {
-    println(s"fetched page signature count: ${fetchedDb.numKeys()}")
-    println(s"fetching pages signature count: ${fetchingDb.numKeys()}")
-  }
-
-  def close() = {
-    println("===Closing Signature DB===")
-
-    fetchedDb.close()
-    fetchingDb.close()
-
-    println("[Signature DB CLOSED]\n")
-  }
+/**
+  * 正在进行抓取的链接签名数据库
+  */
+object FetchingSignatureDb extends SignatureDb(
+  "Fetched Signature Database",
+  new File(MyConf.masterDbPath, "fetching/signature"),
+  MyConf.masterDbCacheSize) {
 
 }

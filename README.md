@@ -1,4 +1,4 @@
-Octopus: 基于Scala+Akka的分布式主题网络爬虫
+Octopus: A web spider 基于Scala+Akka的分布式主题网络爬虫
 ======================
 
 网络爬虫是进行科研数据分析、商业数据处理等活动的重要基础工具，本人基于之前的研究成果和实践经验，采用目前较新的Scala+Akka，设计实现一个高性能的分布式网络爬虫。目标如下：
@@ -10,12 +10,24 @@ Octopus: 基于Scala+Akka的分布式主题网络爬虫
 5. 能够支持IP代理功能
 6. 能够对指定的目标主机进行限速，避免对特定主机因网络爬虫造成过高的负担
 7. 能够集成常规的正文自动抽取（正文抽取算法尚未开源）、关键词抽取、摘要等功能
+8. 能够处理Javascript动态生成的链接
 
 
 
-## 安装部署
+## Compile & Run
 
-@TODO
+### Compile
+
+```bash
+git clone https://github.com/iamxiatian/octopus_spider.git octopus
+cd octopus
+sbt stage
+```
+### Run
+```bash
+cd target/universal/stage
+bin/spider --master --fetcher
+```
 
 ## 核心对象
 

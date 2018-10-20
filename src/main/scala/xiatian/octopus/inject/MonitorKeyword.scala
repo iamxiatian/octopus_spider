@@ -14,8 +14,6 @@ import scala.xml.XML
   *         May 14, 2017 10:26
   */
 object MonitorKeyword {
-  def isAllDigits(x: String) = x forall Character.isDigit
-
   def injectFromFile(keywordsFile: String): Unit =
     TryWith(
       scala.io.Source.fromFile(keywordsFile, "utf-8")
@@ -31,10 +29,7 @@ object MonitorKeyword {
         )
     }
 
-
-  def doc = XML.loadFile("conf/meta-searchers.xml")
-
-  def searchers = (doc \\ "searcher").filter(node => (node \ "@enabled").toString == "true")
+  def isAllDigits(x: String) = x forall Character.isDigit
 
   def injectKeywords(id: Int, keyword: String): Unit = {
     println(s"Inject keyword: $id \t $keyword")
@@ -50,6 +45,10 @@ object MonitorKeyword {
         println(s"Injected $keyword ... [FAILURE]")
     }
   }
+
+  def searchers = (doc \\ "searcher").filter(node => (node \ "@enabled").toString == "true")
+
+  def doc = XML.loadFile("conf/meta-searchers.xml")
 
 }
 

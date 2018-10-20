@@ -1,10 +1,10 @@
-package xiatian.octopus.actor.master.db
+package xiatian.octopus.storage.master
 
 import java.io._
 
 import org.joda.time.DateTime
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.db.QueueListDb
+import xiatian.octopus.storage.QueueListDb
 
 import scala.concurrent.Future
 

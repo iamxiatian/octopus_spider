@@ -1,7 +1,8 @@
 package xiatian.octopus.actor.master
 
 import xiatian.octopus.actor.master.db._
-import xiatian.octopus.db.Db
+import xiatian.octopus.storage.Db
+import xiatian.octopus.storage.master._
 
 /**
   * FetchMaster用到的数据库
@@ -9,7 +10,8 @@ import xiatian.octopus.db.Db
 object MasterDb {
   val dbs: List[Db] = List(
     CrawlDb,
-    SignatureDb,
+    FetchedSignatureDb,
+    FetchingSignatureDb,
     XmlTaskDb,
     StatsDb,
     BadLinkDb,

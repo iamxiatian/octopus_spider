@@ -2,16 +2,14 @@ package xiatian.octopus.httpd.controller
 
 import akka.http.scaladsl.model.ContentTypes.`application/json`
 import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.headers.HttpOriginRange
 import akka.http.scaladsl.server.Directives.{complete, path, _}
 import akka.http.scaladsl.server.Route
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import io.circe._
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
-import xiatian.octopus.actor.master.db.{BadLinkDb, FetchLogDb, WaitDb}
 import xiatian.octopus.httpd.{HttpServer, JsonSupport}
+import xiatian.octopus.storage.master.{BadLinkDb, FetchLogDb, WaitDb}
 
 /**
   * 负责URL队列处理的桶的相关路由
@@ -25,6 +23,8 @@ object LogController extends JsonSupport {
   val settings = HttpServer.settings
 
   val LOG = LoggerFactory.getLogger("LogController")
+
+  def routes: Route = historyRoute ~ deadLinkRoute
 
   private def historyRoute: Route =
     (path("api" / "log" / "link" / "history_list.json") & get & cors(settings)) {
@@ -63,7 +63,5 @@ object LogController extends JsonSupport {
       WaitDb.clear
       writeJson("操作完毕。")
     }
-
-  def routes: Route = historyRoute ~ deadLinkRoute
 }
 

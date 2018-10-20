@@ -1,31 +1,23 @@
-package xiatian.octopus.actor.master.db
+package xiatian.octopus.storage
 
 import org.rocksdb.{Options, RocksDB, RocksIterator}
 import org.zhinang.util.cache.LruCache
-import xiatian.octopus.db.Db
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.Try
 
 /**
-  * 以列表方式存放一系列元素的数据库，实现时把所有的逐渐读到内存中缓存起来，方便遍历。
+  * 所有key都放在缓存中的数据库
+  *
+  * 以列表方式存放一系列元素的数据库，实现时把所有的主键读到内存中缓存起来，方便遍历。
   * 同时，内部维持了一个LRUCache，缓存经常被访问的主键对应的value。
   *
-  * 当前的用途是用于存放Board数据
-  *
-  * @param path      书库库的保存路径
+  * @param path      数据库的保存路径
   * @param cacheSize 缓存大小
   */
-class CachableListDb(path: String,
-                     cacheSize: Int = 2000
-                    ) extends Db {
+class KeyCachedFastDb(path: String, cacheSize: Int = 2000) extends Db {
   RocksDB.loadLibrary()
-
-  private val options = new Options().setCreateIfMissing(true)
-  private val db = RocksDB.open(options, path)
-
-  def numKeys() = db.getLongProperty("rocksdb.estimate-num-keys")
 
   val keys = {
     implicit val o = new math.Ordering[Array[Byte]] {
@@ -60,7 +52,8 @@ class CachableListDb(path: String,
     }
     sortedSet
   }
-
+  private val options = new Options().setCreateIfMissing(true)
+  private val db = RocksDB.open(options, path)
   /**
     * 数据库中有的数据的缓存
     */
@@ -69,7 +62,7 @@ class CachableListDb(path: String,
   /**
     * 保存到数据库中
     */
-  def put(key: Array[Byte], value: Array[Byte]): CachableListDb = {
+  def put(key: Array[Byte], value: Array[Byte]): KeyCachedFastDb = {
     db.put(key, value)
 
     keys += key
@@ -78,13 +71,14 @@ class CachableListDb(path: String,
     this
   }
 
+  def get(key: Array[Byte]): Option[Array[Byte]] = {
+    val cachedValue = hitCache.get(key)
 
-  def remove(key: Array[Byte]): CachableListDb = {
-    keys -= key
-    db.delete(key)
-    hitCache.remove(key)
-
-    this
+    if (cachedValue == null) {
+      getFromDb(key)
+    } else {
+      Some(cachedValue)
+    }
   }
 
   private def getFromDb(key: Array[Byte]): Option[Array[Byte]] = {
@@ -96,16 +90,6 @@ class CachableListDb(path: String,
       hitCache.put(key, value)
 
       Some(value)
-    }
-  }
-
-  def get(key: Array[Byte]): Option[Array[Byte]] = {
-    val cachedValue = hitCache.get(key)
-
-    if (cachedValue == null) {
-      getFromDb(key)
-    } else {
-      Some(cachedValue)
     }
   }
 
@@ -135,9 +119,19 @@ class CachableListDb(path: String,
     true
   }
 
+  def remove(key: Array[Byte]): KeyCachedFastDb = {
+    keys -= key
+    db.delete(key)
+    hitCache.remove(key)
+
+    this
+  }
+
   def open() = {
     println(s"open board db with count: ${numKeys()}")
   }
+
+  def numKeys() = db.getLongProperty("rocksdb.estimate-num-keys")
 
   def close() = {
     println(s"===Close board db === \n\t $path ...")

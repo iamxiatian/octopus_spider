@@ -5,24 +5,33 @@ import java.util.Properties
 import javax.mail.{PasswordAuthentication, Session => MailSession}
 
 object Session {
+
   case class Builder(
-    mailer: Mailer,
-    _auth: Option[Boolean] = None,
-    _startTtls: Option[Boolean] = None,
-    _socketFactory: Option[String] = None,
-    _host: Option[String] = None,
-    _port: Option[Int] = None,
-    _debug: Option[Boolean] = None,
-    _creds: Option[(String, String)] = None) {
-    def auth(a: Boolean) = copy(_auth= Some(a))
+                      mailer: Mailer,
+                      _auth: Option[Boolean] = None,
+                      _startTtls: Option[Boolean] = None,
+                      _socketFactory: Option[String] = None,
+                      _host: Option[String] = None,
+                      _port: Option[Int] = None,
+                      _debug: Option[Boolean] = None,
+                      _creds: Option[(String, String)] = None) {
+    def auth(a: Boolean) = copy(_auth = Some(a))
+
     def startTtls(s: Boolean) = copy(_startTtls = Some(s))
+
     def host(h: String) = copy(_host = Some(h))
+
     def port(p: Int) = copy(_port = Some(p))
+
     def debug(d: Boolean) = copy(_debug = Some(d))
+
     def as(user: String, pass: String) =
       copy(_creds = Some((user, pass)))
-    def socketFactory(cls: String) = copy(_socketFactory = Some(cls))
+
     def sslSocketFactory = socketFactory("javax.net.ssl.SSLSocketFactory")
+
+    def socketFactory(cls: String) = copy(_socketFactory = Some(cls))
+
     def apply() =
       mailer.copy(_session = MailSession.getInstance(new Properties {
         _debug.map(d => put("mail.smtp.debug", d.toString))
@@ -39,6 +48,7 @@ object Session {
               new PasswordAuthentication(user, pass)
           }
       }
-      .orNull))
+        .orNull))
   }
+
 }

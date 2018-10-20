@@ -1,4 +1,4 @@
-package xiatian.octopus.actor.master.db
+package xiatian.octopus.storage.master
 
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
@@ -8,9 +8,9 @@ import com.google.common.primitives.Longs
 import org.joda.time.DateTime
 import org.rocksdb._
 import org.zhinang.util.cache.LruCache
-import xiatian.octopus.actor.master.db.BadLinkType.BadLinkType
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.db.Db
+import xiatian.octopus.storage.Db
+import xiatian.octopus.storage.master.BadLinkType.BadLinkType
 
 import scala.util.Try
 
@@ -55,23 +55,24 @@ class BadLinkDb(path: String,
 
   private val deadUrlHandler = cfHandlers.get(0)
   private val unknownHostHandler = cfHandlers.get(1)
-
-
-  def numKeys() = db.getLongProperty("rocksdb.estimate-num-keys")
+  /**
+    * 数据库中有的数据的缓存
+    */
+  private val hitCache = new LruCache[String, Long](cacheSize)
+  /**
+    * 数据库中不存在数据的缓存，避免每次都进一步判断数据库是否有
+    */
+  private val notHitCache = new LruCache[String, Long](cacheSize)
 
   def open() = {
     println(s"open BadLink db with count: ${numKeys()}")
   }
 
-  /**
-    * 数据库中有的数据的缓存
-    */
-  private val hitCache = new LruCache[String, Long](cacheSize)
+  def numKeys() = db.getLongProperty("rocksdb.estimate-num-keys")
 
-  /**
-    * 数据库中不存在数据的缓存，避免每次都进一步判断数据库是否有
-    */
-  private val notHitCache = new LruCache[String, Long](cacheSize)
+  def saveUrl(url: String): Unit = save(url, BadLinkType.DeadUrl)
+
+  def saveHost(host: String): Unit = save(host, BadLinkType.UnknownHost)
 
   /**
     * 把URL保存到数据库中
@@ -91,9 +92,7 @@ class BadLinkDb(path: String,
     hitCache.put(url, time)
   }
 
-  def saveUrl(url: String): Unit = save(url, BadLinkType.DeadUrl)
-
-  def saveHost(host: String): Unit = save(host, BadLinkType.UnknownHost)
+  def removeUrl(url: String): Unit = remove(url, BadLinkType.DeadUrl)
 
   private def remove(url: String, badType: BadLinkType): Unit = {
     hitCache.remove(url)
@@ -107,9 +106,25 @@ class BadLinkDb(path: String,
     }
   }
 
-  def removeUrl(url: String): Unit = remove(url, BadLinkType.DeadUrl)
-
   def removeHost(host: String): Unit = remove(host, BadLinkType.UnknownHost)
+
+  def hasHost(host: String): Boolean = has(host, BadLinkType.UnknownHost)
+
+  def hasUrl(url: String): Boolean = has(url, BadLinkType.DeadUrl)
+
+  /**
+    * 库里面是否保存有url
+    *
+    * @param url
+    * @return
+    */
+  private def has(url: String, badType: BadLinkType): Boolean = {
+    if (hitCache.containsKey(url))
+      true
+    else if (notHitCache.containsKey(url))
+      false
+    else getFromDb(url, badType).nonEmpty
+  }
 
   private def getFromDb(url: String, badType: BadLinkType): Option[Long] = {
     val value = badType match {
@@ -131,23 +146,11 @@ class BadLinkDb(path: String,
     }
   }
 
-  /**
-    * 库里面是否保存有url
-    *
-    * @param url
-    * @return
-    */
-  private def has(url: String, badType: BadLinkType): Boolean = {
-    if (hitCache.containsKey(url))
-      true
-    else if (notHitCache.containsKey(url))
-      false
-    else getFromDb(url, badType).nonEmpty
-  }
+  def hasHost(host: String, expiredSeconds: Long): Boolean =
+    has(host, BadLinkType.UnknownHost, expiredSeconds)
 
-  def hasHost(host: String): Boolean = has(host, BadLinkType.UnknownHost)
-
-  def hasUrl(url: String): Boolean = has(url, BadLinkType.DeadUrl)
+  def hasUrl(url: String, expiredSeconds: Long): Boolean =
+    has(url, BadLinkType.DeadUrl, expiredSeconds)
 
   /**
     * 库里面是否在expiredSeconds之内保存有该url
@@ -182,12 +185,6 @@ class BadLinkDb(path: String,
       }
     }
   }
-
-  def hasHost(host: String, expiredSeconds: Long): Boolean =
-    has(host, BadLinkType.UnknownHost, expiredSeconds)
-
-  def hasUrl(url: String, expiredSeconds: Long): Boolean =
-    has(url, BadLinkType.DeadUrl, expiredSeconds)
 
   def close() = {
     println(s"===Close BadLink DB=== \n\t $path ...")

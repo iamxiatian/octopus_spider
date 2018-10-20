@@ -1,4 +1,4 @@
-package xiatian.octopus.db
+package xiatian.octopus.storage
 
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicInteger
@@ -32,16 +32,10 @@ class QueueListDb(path: String,
 
   private val options = new Options().setCreateIfMissing(true)
   private val db = RocksDB.open(options, path)
-
-  def open() =
-    println(s"Successfully open db $path")
-
   //FRONT_KEY表示下一个可以放入元素的位置
   private val FRONT_KEY = "#FRONT".getBytes(StandardCharsets.UTF_8)
-
   //REAR_KEY表示下一个可以读取的元素的位置
   private val REAR_KEY = "#REAR".getBytes(StandardCharsets.UTF_8)
-
   // Next Emputy Position
   private val front = {
     val value = db.get(FRONT_KEY)
@@ -50,7 +44,6 @@ class QueueListDb(path: String,
     else
       new AtomicInteger(Ints.fromByteArray(value))
   }
-
   // Next Full Position
   private val rear = {
     val value = db.get(REAR_KEY)
@@ -60,7 +53,8 @@ class QueueListDb(path: String,
       new AtomicInteger(Ints.fromByteArray(value))
   }
 
-  private def get(idx: Int): Array[Byte] = db.get(Ints.toByteArray(idx))
+  def open() =
+    println(s"Successfully open db $path")
 
   /**
     * 增加元素
@@ -83,23 +77,7 @@ class QueueListDb(path: String,
     }
   }
 
-  /**
-    * 弹出左侧的元素（即最早压入的元素）
-    *
-    * @return
-    */
-  def popLeft(): Option[Array[Byte]] = {
-    if (!empty()) {
-      val idx = rear.get()
-      val e = db.get(Ints.toByteArray(idx))
-
-      rear.set((rear.intValue() + 1) % capacity)
-      //rear 要前移一个，腾出空间以放入新的元素
-      db.put(REAR_KEY, Ints.toByteArray(rear.get()))
-
-      Some(e)
-    } else Option.empty[Array[Byte]]
-  }
+  def full() = (front.intValue() + 1) % capacity == rear.intValue()
 
   /**
     * 获取指定页码和页码尺寸下，对应的元素列表，按照元素插入时间倒排
@@ -138,9 +116,7 @@ class QueueListDb(path: String,
     }
   }
 
-  def frontPosition() = front.get()
-
-  def rearPosition() = rear.get()
+  private def get(idx: Int): Array[Byte] = db.get(Ints.toByteArray(idx))
 
   def count() =
     if (front.get >= rear.get)
@@ -148,9 +124,9 @@ class QueueListDb(path: String,
     else
       capacity - (rear.get - front.get)
 
-  def empty() = front.intValue() == rear.intValue()
+  def frontPosition() = front.get()
 
-  def full() = (front.intValue() + 1) % capacity == rear.intValue()
+  def rearPosition() = rear.get()
 
   def close() = {
     if (db != null) db.close
@@ -162,4 +138,24 @@ class QueueListDb(path: String,
 
     db.compactRange()
   }
+
+  /**
+    * 弹出左侧的元素（即最早压入的元素）
+    *
+    * @return
+    */
+  def popLeft(): Option[Array[Byte]] = {
+    if (!empty()) {
+      val idx = rear.get()
+      val e = db.get(Ints.toByteArray(idx))
+
+      rear.set((rear.intValue() + 1) % capacity)
+      //rear 要前移一个，腾出空间以放入新的元素
+      db.put(REAR_KEY, Ints.toByteArray(rear.get()))
+
+      Some(e)
+    } else Option.empty[Array[Byte]]
+  }
+
+  def empty() = front.intValue() == rear.intValue()
 }

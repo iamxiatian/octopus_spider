@@ -1,4 +1,4 @@
-package xiatian.octopus.db
+package xiatian.octopus.storage
 
 import scala.util.Try
 

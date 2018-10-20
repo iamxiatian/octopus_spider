@@ -4,9 +4,10 @@ import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 
 import xiatian.octopus.common.MyConf
+import xiatian.octopus.storage.KeyCachedFastDb
 
 object XmlTaskDb extends
-  CachableListDb(
+  KeyCachedFastDb(
     new File(MyConf.masterDbPath, "task").getCanonicalPath
   ) {
 
@@ -40,11 +41,11 @@ object XmlTaskDb extends
       .map(new String(_, UTF_8))
       .toSeq
 
+  def exists(boardId: Long): Boolean = exists(boardId.toString)
+
   /**
     * 该频道是否存在
     */
   def exists(boardId: String): Boolean = keys.contains(boardId.getBytes(UTF_8))
-
-  def exists(boardId: Long): Boolean = exists(boardId.toString)
 
 }

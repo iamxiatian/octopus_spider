@@ -28,9 +28,9 @@ class FetchQueue(name: String) {
 
   def isEmpty: Boolean = q.isEmpty
 
-  def size: Int = q.size()
-
   def lessThan(maxSize: Int, ratio: Double): Boolean = size <= (maxSize * ratio)
+
+  def size: Int = q.size()
 
   def moreThan(maxSize: Int, ratio: Double): Boolean = size >= (maxSize * ratio)
 
@@ -51,6 +51,10 @@ class Bucket(val idx: Int, val maxSize: Int) {
     */
   val queues = new ConcurrentHashMap[Int, FetchQueue]()
 
+  def putLast(link: FetchLink): Unit = getQueue(link.`type`).putLast(link)
+
+  def putFirst(link: FetchLink): Unit = getQueue(link.`type`).putFirst(link)
+
   private def getQueue(t: LinkType): FetchQueue =
     if (queues.containsKey(t.id)) {
       queues.get(t.id)
@@ -59,12 +63,6 @@ class Bucket(val idx: Int, val maxSize: Int) {
       queues.put(t.id, q)
       q
     }
-
-  def putLast(link: FetchLink): Unit = getQueue(link.`type`).putLast(link)
-
-  def putFirst(link: FetchLink): Unit = getQueue(link.`type`).putFirst(link)
-
-  def takeFirst(t: LinkType): FetchLink = getQueue(t).takeFirst()
 
   def takeLast(t: LinkType): FetchLink = getQueue(t).takeLast()
 
@@ -108,6 +106,8 @@ class Bucket(val idx: Int, val maxSize: Int) {
       locate(0, types).map(takeFirst)
     }
 
+  def takeFirst(t: LinkType): FetchLink = getQueue(t).takeFirst()
+
   def isEmpty: Boolean = queues.values().forall(_.isEmpty)
 
   def nonEmpty: Boolean = queues.values().forall(_.nonEmpty)
@@ -116,7 +116,7 @@ class Bucket(val idx: Int, val maxSize: Int) {
 
   def returnLinks: Int = queues.map { case (_, q) => q.pushLinkBack() }.sum
 
-  def count(t: LinkType): Int = getQueue(t).size
-
   def count: Int = LinkType.all.map(t => count(t)).sum
+
+  def count(t: LinkType): Int = getQueue(t).size
 }

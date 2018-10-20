@@ -17,7 +17,7 @@ case class ProxyIp(host: String, port: Int, expiredTimeInMillis: Long) {
 
   def address: String = s"$host:$port"
 
-  override def toString(): String ={
+  override def toString(): String = {
     val d = new DateTime(expiredTimeInMillis).toString("MM-dd HH:mm:ss")
     s"$host:$port(expired at $d)"
   }

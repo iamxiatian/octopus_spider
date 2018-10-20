@@ -12,15 +12,12 @@ sealed trait Content
 case class Text(body: String, charset: Charset = Charset.defaultCharset) extends Content
 
 case class Multipart(_parts: Seq[MimeBodyPart] = Seq.empty[MimeBodyPart]) extends Content {
-  def add(part: MimeBodyPart): Multipart =
-    Multipart(_parts :+ part)
-
   def add(
-    bytes: Array[Byte],
-    mimetype: String,
-    name: Option[String] = None,
-    disposition: Option[String] = None,
-    description: Option[String] = None): Multipart =
+           bytes: Array[Byte],
+           mimetype: String,
+           name: Option[String] = None,
+           disposition: Option[String] = None,
+           description: Option[String] = None): Multipart =
     add(new MimeBodyPart {
       setContent(bytes, mimetype)
       disposition.foreach(setDisposition)
@@ -32,6 +29,9 @@ case class Multipart(_parts: Seq[MimeBodyPart] = Seq.empty[MimeBodyPart]) extend
     add(new MimeBodyPart {
       setContent(str, "text/plain;charset=utf-8")
     })
+
+  def add(part: MimeBodyPart): Multipart =
+    Multipart(_parts :+ part)
 
   def html(str: String) =
     add(new MimeBodyPart {

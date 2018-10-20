@@ -27,6 +27,19 @@ class ScheduleActor(system: ActorSystem) extends Actor with ActorWatching {
 
   import ScheduleActor._
 
+  def receive: Receive = {
+    case Starting =>
+      scheduling()
+
+    case MailJob =>
+      LOG.info(s"RUN JOB at ${now.toString("yyyy-MM-dd HH:mm:ss")}")
+      sendMail()
+
+    case Scheduling =>
+      LOG.info(s"Scheduling jobs at ${now.toString("MM-dd HH:mm:ss")}")
+      scheduling()
+  }
+
   def scheduling(): Cancellable = {
     nextScheduleJobs match {
       case Some((interval, jobs)) =>
@@ -46,19 +59,6 @@ class ScheduleActor(system: ActorSystem) extends Actor with ActorWatching {
     }
   }
 
-  def receive: Receive = {
-    case Starting =>
-      scheduling()
-
-    case MailJob =>
-      LOG.info(s"RUN JOB at ${now.toString("yyyy-MM-dd HH:mm:ss")}")
-      sendMail()
-
-    case Scheduling =>
-      LOG.info(s"Scheduling jobs at ${now.toString("MM-dd HH:mm:ss")}")
-      scheduling()
-  }
-
   def sendMail() = {
     //if (MyConf.mailNotify)
     println(s"send mail now ===> ${new java.util.Date()}")
@@ -68,32 +68,11 @@ class ScheduleActor(system: ActorSystem) extends Actor with ActorWatching {
 
 object ScheduleActor {
 
-  /**
-    * 触发任务
-    */
-  case class Trigger(hour: Int, minute: Int, jobs: List[ScheduleJob]) {
-    def toSeconds(): Long = {
-      val c = Calendar.getInstance
-      c.set(Calendar.HOUR_OF_DAY, hour)
-      c.set(Calendar.MINUTE, minute)
-      c.set(Calendar.SECOND, 0)
-      c.set(Calendar.MILLISECOND, 0)
-      c.getTimeInMillis / 1000
-    }
-  }
-
-  case object Scheduling
-
-  trait ScheduleJob
-
-  case object MailJob extends ScheduleJob
-
   val triggers: List[Trigger] = {
     MyConf.mailTriggerTimes.map {
       case (hour, minute) => Trigger(hour, minute, List(MailJob))
     }
   }
-
 
   /**
     * 根据triggerTimes中提供的触发时间点列表，找出最近一次应该触发调度处理的
@@ -127,4 +106,24 @@ object ScheduleActor {
       }
     }
   }
+
+  trait ScheduleJob
+
+  /**
+    * 触发任务
+    */
+  case class Trigger(hour: Int, minute: Int, jobs: List[ScheduleJob]) {
+    def toSeconds(): Long = {
+      val c = Calendar.getInstance
+      c.set(Calendar.HOUR_OF_DAY, hour)
+      c.set(Calendar.MINUTE, minute)
+      c.set(Calendar.SECOND, 0)
+      c.set(Calendar.MILLISECOND, 0)
+      c.getTimeInMillis / 1000
+    }
+  }
+
+  case object Scheduling
+
+  case object MailJob extends ScheduleJob
 }

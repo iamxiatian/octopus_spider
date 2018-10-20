@@ -17,10 +17,6 @@ trait JsonSupport extends RouteSupport {
     "msg" -> msg.asJson,
     "data" -> data).asJson.pretty(Printer.spaces2)
 
-  def jsonError(msg: String): String = Map(
-    "code" -> ERROR_CODE.asJson,
-    "msg" -> msg.asJson).asJson.pretty(Printer.spaces2)
-
   /**
     * 输出符合layui模板格式的JSON表格数据
     *
@@ -47,8 +43,11 @@ trait JsonSupport extends RouteSupport {
     HttpEntity(ContentTypes.`application/json`, jsonOk(data, msg))
   )
 
-
   def writeJsonError(msg: String): StandardRoute = complete(
     HttpEntity(ContentTypes.`application/json`, jsonError(msg))
   )
+
+  def jsonError(msg: String): String = Map(
+    "code" -> ERROR_CODE.asJson,
+    "msg" -> msg.asJson).asJson.pretty(Printer.spaces2)
 }

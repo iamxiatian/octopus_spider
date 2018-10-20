@@ -28,11 +28,6 @@ object Http {
 
   val defaultClient = new HttpClientAgent(zhinangConf)
 
-  def get(link: FetchLink,
-          proxyHolder: Option[ProxyIp] = None,
-          contentType: String = "text/html"): UrlResponse =
-    get(link.url, link.refer.getOrElse(""), proxyHolder, contentType)
-
   def get(url: String): UrlResponse = get(url, "", None, "text/html")
 
   def get(url: String,
@@ -139,4 +134,9 @@ object Http {
       link.url
     )
   }
+
+  def get(link: FetchLink,
+          proxyHolder: Option[ProxyIp] = None,
+          contentType: String = "text/html"): UrlResponse =
+    get(link.url, link.refer.getOrElse(""), proxyHolder, contentType)
 }

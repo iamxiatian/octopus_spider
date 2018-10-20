@@ -5,10 +5,10 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, Da
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import xiatian.octopus.FastSerializable
-import xiatian.octopus.actor.master.db.BoardDb
 import xiatian.octopus.actor.master.{BucketController, MasterConfig, UrlManager}
 import xiatian.octopus.common.MyConf
 import xiatian.octopus.model.{FetchLink, HubLink}
+import xiatian.octopus.storage.master.BoardDb
 import xiatian.octopus.util.TryWith
 
 import scala.collection.mutable.ListBuffer
@@ -275,6 +275,22 @@ object StopFilter {
   */
 object Board extends MasterConfig {
   val log = LoggerFactory.getLogger(Board.getClass)
+  /**
+    * 没有对应的频道的默认类
+    */
+  val noneBoard = Board("0",
+    0,
+    "UNKNOWN",
+    1, 0, 0, 0, 0, 0, 1, "UNKNOWN", List("#"),
+    "0", "AUTO", "AUTO", false, "", "", false, "0", "", "infoCheck",
+    //ArticleFilter(".*", ".*", 10, 100, StringMatcher(), StopFilter()),
+    ArticleFilter("removed_links", ".*", 10, 100, StringMatcher(), StopFilter()),
+    ImageRule(),
+    1, Int.MaxValue,
+    0,
+    "removed_links",
+    0,
+    2)
 
   def readFrom(bytes: Array[Byte]) = {
     val din = new DataInputStream(new ByteArrayInputStream(bytes))
@@ -357,15 +373,125 @@ object Board extends MasterConfig {
       gatherDayNum)
   }
 
-
-  def toInt(value: String) = NumberUtils.toInt(value, 0)
-
   def toLong(value: String) = NumberUtils.toLong(value, 0)
 
   def toLong(value: String, errorMsg: String) = {
     if (!NumberUtils.isNumber(value))
       log.error(errorMsg)
     NumberUtils.toLong(value, 0)
+  }
+
+  /**
+    * 把一个频道规则，注入到Redis中, 如果所有的记录都设置成功，则返回Futre[True]，
+    * 否则返回Future[False]
+    *
+    * @param crawlNow 如果设为true，则同时把该频道构造为FetchLink，
+    *                 注入到内存中的队列桶中
+    */
+  def injectBoard(board: Board, crawlNow: Boolean = false): Boolean =
+    if (board.actionType == 3) {
+      log.info("try to delete ${board.code} because actionType = 3")
+      BoardDb.delete(board.code) //actionType = 3表示要删除该任务
+      true
+    } else {
+      BoardDb.save(board)
+      log.info(s"push link to crawling queue: ${board.entryUrls.mkString("\t")}")
+      if (crawlNow) {
+        board.entryUrls.map(
+          entryUrl =>
+            BucketController.fillLink(
+              FetchLink(entryUrl, None, board.name, 0, 0, HubLink, board.code),
+              true
+            )
+        )
+      }
+
+      board.entryUrls.map(
+        entryUrl =>
+          UrlManager.pushLink(
+            FetchLink(entryUrl, None, board.name, 0, 0, HubLink, board.code),
+            false
+          )
+      )
+      true
+    }
+
+  def entryLinks(): Seq[FetchLink] = entryLinks(0, BoardDb.count())
+
+  /**
+    * 返回从start开始到end截至（包括）d的频道对应的FetchLink对象
+    *
+    * @param startInclude
+    * @param endInclude
+    * @return
+    */
+  def entryLinks(startInclude: Int, endInclude: Int): Seq[FetchLink] =
+    BoardDb.getBoardIds(startInclude, endInclude).flatMap {
+      id =>
+        BoardDb.get(id).map {
+          board =>
+            board.entryUrls.map {
+              url =>
+                FetchLink(url, None, board.name, 0, 0, HubLink, id)
+            }
+        }
+    }.flatten
+
+  def count(): Int = BoardDb.count()
+
+  def injectFromXml(xmlFile: String, encoding: String = "utf-8"): Unit = {
+    println(s"Injecting boards to Redis: ")
+    loadBoardsFromXml(xmlFile, encoding).foreach {
+      board =>
+        BoardDb.save(board)
+        print(".")
+    }
+    println("\tDONE.")
+  }
+
+  def loadBoardsFromXml(xmlFile: String, encoding: String): List[Board] = {
+    println(s"Loading xml file from " +
+      s"${new java.io.File(xmlFile).getCanonicalPath} " +
+      s"with encoding $encoding ...")
+
+    val boardBuffer = ListBuffer[Board]()
+
+    TryWith(
+      scala.io.Source.fromFile(xmlFile, encoding)
+    ) {
+      source =>
+        val lines = source.getLines()
+
+        var count = 1
+        while (lines.hasNext) {
+          val boardText = lines.dropWhile(!_.trim.startsWith("<BOARD>"))
+            .takeWhile(!_.trim.startsWith("</BOARD>"))
+            .map { s =>
+              val pos1 = s.lastIndexOf(">")
+              val pos2 = s.lastIndexOf("#")
+              if (pos2 > 0 && pos2 > pos1)
+                filterUnicodeString(s.substring(0, pos2))
+              else
+                filterUnicodeString(s)
+            }
+            .mkString("\n")
+
+          if (boardText.length > 0) {
+            val board = parseBoardText(boardText + "\n</BOARD>")
+
+            if (count % 500 == 0)
+              println(s"$count \t loading BOARD ${board.name} (${board.code})")
+            count += 1
+
+            boardBuffer.append(board)
+          }
+        }
+    }
+
+    println(s"Load ${boardBuffer.length} boards from " +
+      s"${new java.io.File(xmlFile).getCanonicalPath}")
+
+    boardBuffer.toList
   }
 
   /**
@@ -453,137 +579,7 @@ object Board extends MasterConfig {
     )
   }
 
-
-  def loadBoardsFromXml(xmlFile: String, encoding: String): List[Board] = {
-    println(s"Loading xml file from " +
-      s"${new java.io.File(xmlFile).getCanonicalPath} " +
-      s"with encoding $encoding ...")
-
-    val boardBuffer = ListBuffer[Board]()
-
-    TryWith(
-      scala.io.Source.fromFile(xmlFile, encoding)
-    ) {
-      source =>
-        val lines = source.getLines()
-
-        var count = 1
-        while (lines.hasNext) {
-          val boardText = lines.dropWhile(!_.trim.startsWith("<BOARD>"))
-            .takeWhile(!_.trim.startsWith("</BOARD>"))
-            .map { s =>
-              val pos1 = s.lastIndexOf(">")
-              val pos2 = s.lastIndexOf("#")
-              if (pos2 > 0 && pos2 > pos1)
-                filterUnicodeString(s.substring(0, pos2))
-              else
-                filterUnicodeString(s)
-            }
-            .mkString("\n")
-
-          if (boardText.length > 0) {
-            val board = parseBoardText(boardText + "\n</BOARD>")
-
-            if (count % 500 == 0)
-              println(s"$count \t loading BOARD ${board.name} (${board.code})")
-            count += 1
-
-            boardBuffer.append(board)
-          }
-        }
-    }
-
-    println(s"Load ${boardBuffer.length} boards from " +
-      s"${new java.io.File(xmlFile).getCanonicalPath}")
-
-    boardBuffer.toList
-  }
-
-
-  /**
-    * 把一个频道规则，注入到Redis中, 如果所有的记录都设置成功，则返回Futre[True]，
-    * 否则返回Future[False]
-    *
-    * @param crawlNow 如果设为true，则同时把该频道构造为FetchLink，
-    *                 注入到内存中的队列桶中
-    */
-  def injectBoard(board: Board, crawlNow: Boolean = false): Boolean =
-    if (board.actionType == 3) {
-      log.info("try to delete ${board.code} because actionType = 3")
-      BoardDb.delete(board.code) //actionType = 3表示要删除该任务
-      true
-    } else {
-      BoardDb.save(board)
-      log.info(s"push link to crawling queue: ${board.entryUrls.mkString("\t")}")
-      if (crawlNow) {
-        board.entryUrls.map(
-          entryUrl =>
-            BucketController.fillLink(
-              FetchLink(entryUrl, None, board.name, 0, 0, HubLink, board.code),
-              true
-            )
-        )
-      }
-
-      board.entryUrls.map(
-        entryUrl =>
-          UrlManager.pushLink(
-            FetchLink(entryUrl, None, board.name, 0, 0, HubLink, board.code),
-            false
-          )
-      )
-      true
-    }
-
-  /**
-    * 返回从start开始到end截至（包括）d的频道对应的FetchLink对象
-    *
-    * @param startInclude
-    * @param endInclude
-    * @return
-    */
-  def entryLinks(startInclude: Int, endInclude: Int): Seq[FetchLink] =
-    BoardDb.getBoardIds(startInclude, endInclude).flatMap {
-      id =>
-        BoardDb.get(id).map {
-          board =>
-            board.entryUrls.map {
-              url =>
-                FetchLink(url, None, board.name, 0, 0, HubLink, id)
-            }
-        }
-    }.flatten
-
-  def entryLinks(): Seq[FetchLink] = entryLinks(0, BoardDb.count())
-
-  def count(): Int = BoardDb.count()
-
-  def injectFromXml(xmlFile: String, encoding: String = "utf-8"): Unit = {
-    println(s"Injecting boards to Redis: ")
-    loadBoardsFromXml(xmlFile, encoding).foreach {
-      board =>
-        BoardDb.save(board)
-        print(".")
-    }
-    println("\tDONE.")
-  }
-
-  /**
-    * 没有对应的频道的默认类
-    */
-  val noneBoard = Board("0",
-    0,
-    "UNKNOWN",
-    1, 0, 0, 0, 0, 0, 1, "UNKNOWN", List("#"),
-    "0", "AUTO", "AUTO", false, "", "", false, "0", "", "infoCheck",
-    //ArticleFilter(".*", ".*", 10, 100, StringMatcher(), StopFilter()),
-    ArticleFilter("removed_links", ".*", 10, 100, StringMatcher(), StopFilter()),
-    ImageRule(),
-    1, Int.MaxValue,
-    0,
-    "removed_links",
-    0,
-    2)
+  def toInt(value: String) = NumberUtils.toInt(value, 0)
 
   def get(id: String): Option[Board] = BoardDb.get(id toString)
 }

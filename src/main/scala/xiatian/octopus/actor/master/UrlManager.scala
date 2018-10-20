@@ -5,9 +5,10 @@ import java.text.SimpleDateFormat
 import io.circe.Json
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
-import xiatian.octopus.actor.master.db.{BadLinkDb, CrawlDb, SignatureDb, StatsDb}
+import xiatian.octopus.actor.master.db.StatsDb
 import xiatian.octopus.common.MyConf
 import xiatian.octopus.model.{FetchLink, FetchTask, LinkType}
+import xiatian.octopus.storage.master._
 
 import scala.concurrent.Future
 
@@ -19,22 +20,12 @@ import scala.concurrent.Future
   */
 object UrlManager extends MasterConfig {
   val log = LoggerFactory.getLogger(UrlManager.getClass)
+  val dayFormat = new SimpleDateFormat("yyMMdd")
+  val hourFormat = new SimpleDateFormat("yyMMddHH")
 
   def markFetched(link: FetchLink) = {
-    SignatureDb.fetchedDb.put(link.urlHash)
+    FetchedSignatureDb.put(link.urlHash)
     removeFetching(link)
-  }
-
-  /**
-    * url是否已经被抓取过
-    */
-  def isFetched(link: FetchLink) = {
-    val expiredSeconds: Long = FetchTask.get(link).map {
-      task =>
-        task.nextFetchSeconds(link).getOrElse(MyConf.MaxTimeSeconds)
-    }.getOrElse(MyConf.MaxTimeSeconds)
-
-    SignatureDb.fetchedDb.has(link.urlHash, expiredSeconds)
   }
 
   /**
@@ -44,19 +35,7 @@ object UrlManager extends MasterConfig {
     * @return
     */
   def markFetching(link: FetchLink) =
-    SignatureDb.fetchingDb.put(link.urlHash)
-
-  /**
-    * 是否在数据页面的待抓取队列中
-    */
-  def isFetching(link: FetchLink) =
-    SignatureDb.fetchingDb.has(link.urlHash, 120L)
-
-  def removeFetching(link: FetchLink) =
-    SignatureDb.fetchingDb.remove(link.urlHash)
-
-
-  private def markUnknownHost(host: String) = BadLinkDb.saveHost(host)
+    FetchingSignatureDb.put(link.urlHash)
 
   /**
     * 标记死链接url,避免重复抓取
@@ -69,11 +48,10 @@ object UrlManager extends MasterConfig {
     }
   }
 
-  /**
-    * Expired time: 5 minutes (300 seconds)
-    *
-    */
-  def isDead(link: FetchLink) = BadLinkDb.hasUrl(link.url, 300)
+  def removeFetching(link: FetchLink) =
+    FetchingSignatureDb.remove(link.urlHash)
+
+  private def markUnknownHost(host: String) = BadLinkDb.saveHost(host)
 
   /**
     * 链接存入全局队列中，等待抓取, 如果插入，返回true，否则返回false.
@@ -94,6 +72,29 @@ object UrlManager extends MasterConfig {
       CrawlDb.pushLink(link)
     }
 
+  /**
+    * url是否已经被抓取过
+    */
+  def isFetched(link: FetchLink) = {
+    val expiredSeconds: Long = FetchTask.get(link).map {
+      task =>
+        task.nextFetchSeconds(link).getOrElse(MyConf.MaxTimeSeconds)
+    }.getOrElse(MyConf.MaxTimeSeconds)
+
+    FetchedSignatureDb.has(link.urlHash, expiredSeconds)
+  }
+
+  /**
+    * 是否在数据页面的待抓取队列中
+    */
+  def isFetching(link: FetchLink) =
+    FetchingSignatureDb.has(link.urlHash, 120L)
+
+  /**
+    * Expired time: 5 minutes (300 seconds)
+    *
+    */
+  def isDead(link: FetchLink) = BadLinkDb.hasUrl(link.url, 300)
 
   /**
     * 把原来从队列中出来的链接重新归还回队列, 插入成功，返回Future(1),否则返回Future(0)
@@ -119,18 +120,9 @@ object UrlManager extends MasterConfig {
   def pushLink(link: FetchLink): Boolean =
     if (CrawlDb.has(link)) false else CrawlDb.pushLink(link)
 
-
   def popLink(t: LinkType): Option[FetchLink] = CrawlDb.popLink(t)
 
   def queueSize(t: LinkType) = CrawlDb.queueSize(t)
-
-  val dayFormat = new SimpleDateFormat("yyMMdd")
-  val hourFormat = new SimpleDateFormat("yyMMddHH")
-
-  private def currentDayAndHour(): (String, String) = {
-    val d = new java.util.Date
-    (dayFormat.format(d), hourFormat.format(d))
-  }
 
   def countSuccess(link: FetchLink) = Future.successful {
     countStats(s"p:s:${link.`type`.id}")
@@ -151,6 +143,11 @@ object UrlManager extends MasterConfig {
     StatsDb.inc(s"${key}:${hour}", incValue)
   }
 
+  private def currentDayAndHour(): (String, String) = {
+    val d = new java.util.Date
+    (dayFormat.format(d), hourFormat.format(d))
+  }
+
   /**
     * 清空数据
     */
@@ -162,32 +159,6 @@ object UrlManager extends MasterConfig {
   ///////////////////////////////////////
   // Report information
   ///////////////////////////////////////
-
-  /**
-    * 返回最近days天的标签和对应的查询主键的名称，如：
-    * (2016/12/12, 161212)
-    */
-  def lastDays(days: Int): List[(String, String)] = {
-    val df = new SimpleDateFormat("yyyy/MM/dd")
-    val d = System.currentTimeMillis()
-    (0 until days) map (i => {
-      val currentDate = new java.util.Date(d - (86400000L * i))
-      (df.format(currentDate), dayFormat.format(currentDate))
-    }) toList
-  }
-
-  /**
-    * 返回最近hours小时内的标签和对应的查询主键名称，如：
-    * (2016/12/12 11:00-11:59, 16121211)
-    */
-  def lastHours(hours: Int): List[(String, String)] = {
-    val df = new SimpleDateFormat("yyyy/MM/dd HH:00 - HH:59")
-    val d = System.currentTimeMillis()
-    (0 until hours) map (i => {
-      val currentDate = new java.util.Date(d - (3600000L * i))
-      (df.format(currentDate), hourFormat.format(currentDate))
-    }) toList
-  }
 
   /**
     * 返回最近2天和3小时之内的统计数据, 保存到JSON对象中
@@ -237,5 +208,31 @@ object UrlManager extends MasterConfig {
       "days" -> dayResult.asJson,
       "hours" -> hourResult.asJson
     )
+  }
+
+  /**
+    * 返回最近days天的标签和对应的查询主键的名称，如：
+    * (2016/12/12, 161212)
+    */
+  def lastDays(days: Int): List[(String, String)] = {
+    val df = new SimpleDateFormat("yyyy/MM/dd")
+    val d = System.currentTimeMillis()
+    (0 until days) map (i => {
+      val currentDate = new java.util.Date(d - (86400000L * i))
+      (df.format(currentDate), dayFormat.format(currentDate))
+    }) toList
+  }
+
+  /**
+    * 返回最近hours小时内的标签和对应的查询主键名称，如：
+    * (2016/12/12 11:00-11:59, 16121211)
+    */
+  def lastHours(hours: Int): List[(String, String)] = {
+    val df = new SimpleDateFormat("yyyy/MM/dd HH:00 - HH:59")
+    val d = System.currentTimeMillis()
+    (0 until hours) map (i => {
+      val currentDate = new java.util.Date(d - (3600000L * i))
+      (df.format(currentDate), hourFormat.format(currentDate))
+    }) toList
   }
 }

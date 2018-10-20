@@ -19,7 +19,7 @@ import scala.util.{Failure, Success, Try}
   * 爬虫的URL链接对象
   *
   * @param url
-  * @param depth 采集的深度，默认为0，其子链接的深度为1，以此类推
+  * @param depth   采集的深度，默认为0，其子链接的深度为1，以此类推
   * @param retries 连续抓取失败的次数
   * @param `type`  类型
   * @param taskId  : 表明该链接是由哪个栏目抓取得到的，如果为"auto"， 则通过自动抽取进行处理
@@ -104,14 +104,15 @@ case class FetchLink(url: String,
     params
   )
 
-  def urlHash: Array[Byte] = HashUtil.hashAsBytes(url)
-
   /**
     * URL哈希值的十六进制表示结果，例如：
     * 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+    *
     * @return
     */
   def urlHashHex: String = HexBytesUtil.bytes2hex(urlHash)
+
+  def urlHash: Array[Byte] = HashUtil.hashAsBytes(url)
 }
 
 object FetchLink {

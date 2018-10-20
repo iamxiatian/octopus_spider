@@ -4,8 +4,8 @@ import akka.actor.{Actor, ActorSystem}
 import org.joda.time.DateTime
 import xiatian.octopus.actor.ActorMessage.Starting
 import xiatian.octopus.actor.ActorWatching
-import xiatian.octopus.actor.master.db.WaitDb
 import xiatian.octopus.model.FetchLink
+import xiatian.octopus.storage.master.WaitDb
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -22,14 +22,6 @@ class InjectActor(system: ActorSystem) extends Actor with ActorWatching {
   val EACH_INJECT_COUNT = 5100 // 每次注入的任务数量
 
   var paused = false //是否暂停注入，默认为false，表示持续注入
-
-  sealed trait InjectAction
-
-  case object FillBucket extends InjectAction
-
-  case object TransformJob extends InjectAction
-
-  case object Inject extends InjectAction
 
   def receive = {
     case Starting =>
@@ -95,5 +87,13 @@ class InjectActor(system: ActorSystem) extends Actor with ActorWatching {
       }
     }
   }
+
+  sealed trait InjectAction
+
+  case object FillBucket extends InjectAction
+
+  case object TransformJob extends InjectAction
+
+  case object Inject extends InjectAction
 
 }

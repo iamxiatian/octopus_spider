@@ -1,4 +1,4 @@
-package xiatian.octopus.db
+package xiatian.octopus.storage
 
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.Arrays
@@ -8,7 +8,7 @@ import com.google.common.collect.Lists
 import com.google.common.primitives.Longs
 import org.rocksdb._
 import org.slf4j.LoggerFactory
-import xiatian.octopus.db.ScoreUpdate.{ALWAYS, GT_OLD, LT_OLD, NEVER}
+import xiatian.octopus.storage.ScoreUpdate.{ALWAYS, GT_OLD, LT_OLD, NEVER}
 
 import scala.util.Try
 
@@ -212,21 +212,6 @@ class SortedSetDb(dbName: String, //数据库的别名，方便调试和日志�
     result
   }
 
-  def remove(key: Array[Byte]): Unit = {
-    //先查看原先的key是否已经在排序队列中了。
-    val scoreArray: Array[Byte] = db.get(keyScoreHandler, key)
-    if (scoreArray != null) {
-      //删除原先的score_sort列中的对应元素
-      val scoreSortKey = scoreArray ++ key
-      db.delete(scoreSortHandler, scoreSortKey)
-
-      keyCounter.decrementAndGet()
-    }
-
-    // 删除keyScore列
-    db.delete(keyScoreHandler, key)
-  }
-
   /**
     * 获取指定页码内的记录, 返回一个三元组序列（key, value, score）
     *
@@ -278,6 +263,21 @@ class SortedSetDb(dbName: String, //数据库的别名，方便调试和日志�
 
     it.close()
     db.compactRange()
+  }
+
+  def remove(key: Array[Byte]): Unit = {
+    //先查看原先的key是否已经在排序队列中了。
+    val scoreArray: Array[Byte] = db.get(keyScoreHandler, key)
+    if (scoreArray != null) {
+      //删除原先的score_sort列中的对应元素
+      val scoreSortKey = scoreArray ++ key
+      db.delete(scoreSortHandler, scoreSortKey)
+
+      keyCounter.decrementAndGet()
+    }
+
+    // 删除keyScore列
+    db.delete(keyScoreHandler, key)
   }
 
   def open() = {

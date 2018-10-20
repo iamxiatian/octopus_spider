@@ -14,12 +14,6 @@ class LookupActor(path: String) extends Actor {
 
   sendIdentifyRequest()
 
-  def sendIdentifyRequest(): Unit = {
-    context.actorSelection(path) ! Identify(path)
-    import context.dispatcher
-    context.system.scheduler.scheduleOnce(3.seconds, self, ReceiveTimeout)
-  }
-
   def receive = identifying
 
   def identifying: Actor.Receive = {
@@ -34,6 +28,12 @@ class LookupActor(path: String) extends Actor {
     case ReceiveTimeout => sendIdentifyRequest()
 
     case _ => print("->") //println("Not ready yet")
+  }
+
+  def sendIdentifyRequest(): Unit = {
+    context.actorSelection(path) ! Identify(path)
+    import context.dispatcher
+    context.system.scheduler.scheduleOnce(3.seconds, self, ReceiveTimeout)
   }
 
   def active(actor: ActorRef): Actor.Receive = ???

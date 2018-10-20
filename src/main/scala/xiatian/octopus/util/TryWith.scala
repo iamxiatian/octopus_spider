@@ -8,15 +8,15 @@ import scala.util.{Failure, Try}
 /**
   * 自动关闭资源
   *
-  <pre>
-  TryWith(
-      scala.io.Source.fromFile(filename, encoding)
-    ) {
-      source =>
-        source.getLines()
-        ...
-     }
-  </pre>
+  * <pre>
+  * TryWith(
+  *scala.io.Source.fromFile(filename, encoding)
+  * ) {
+  * source =>
+  *source.getLines()
+  * ...
+  * }
+  * </pre>
   */
 object TryWith {
   def apply[C <: Closeable, R](resource: => C)(f: C => R): Try[R] =

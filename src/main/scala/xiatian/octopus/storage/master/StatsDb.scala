@@ -8,7 +8,7 @@ import com.google.common.primitives.Longs
 import org.rocksdb._
 import org.zhinang.util.cache.LruCache
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.db.Db
+import xiatian.octopus.storage.Db
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
@@ -26,18 +26,15 @@ class StatsDb(path: String,
     .setCreateIfMissing(true)
 
   private val db = RocksDB.open(options, path)
-
-  def numKeys() = db.getLongProperty("rocksdb.estimate-num-keys")
-
   private val writeCache = new ConcurrentHashMap[String, Long]()
-
   private val hitCache = new LruCache[String, Long](cacheSize)
-
   private var lastSyncTime = System.currentTimeMillis()
 
   def open() = {
     println(s"open statistical db with count: ${numKeys()}")
   }
+
+  def numKeys() = db.getLongProperty("rocksdb.estimate-num-keys")
 
   def inc(key: String, adder: Long): Unit = {
     writeCache.put(key, writeCache.getOrDefault(key, 0) + adder)
@@ -46,28 +43,6 @@ class StatsDb(path: String,
     if (lastSyncTime + 900000 < System.currentTimeMillis()) {
       lastSyncTime = System.currentTimeMillis()
       Future.successful(flush())
-    }
-  }
-
-  private def getFromDb(key: String): Long = {
-    val value = db.get(key.getBytes(UTF_8))
-    if (value == null) {
-      0
-    } else {
-      val cnt = Longs.fromByteArray(value)
-
-      //add to cache
-      hitCache.put(key, cnt)
-
-      cnt
-    }
-  }
-
-  def get(key: String): Long = {
-    if (hitCache.containsKey(key)) {
-      hitCache.get(key) + writeCache.getOrDefault(key, 0)
-    } else {
-      getFromDb(key) + writeCache.getOrDefault(key, 0)
     }
   }
 
@@ -85,6 +60,27 @@ class StatsDb(path: String,
     writeCache.clear()
   }
 
+  def get(key: String): Long = {
+    if (hitCache.containsKey(key)) {
+      hitCache.get(key) + writeCache.getOrDefault(key, 0)
+    } else {
+      getFromDb(key) + writeCache.getOrDefault(key, 0)
+    }
+  }
+
+  private def getFromDb(key: String): Long = {
+    val value = db.get(key.getBytes(UTF_8))
+    if (value == null) {
+      0
+    } else {
+      val cnt = Longs.fromByteArray(value)
+
+      //add to cache
+      hitCache.put(key, cnt)
+
+      cnt
+    }
+  }
 
   def close() = {
     println(s"===Closing Statistical DB=== \n\t $path ...")

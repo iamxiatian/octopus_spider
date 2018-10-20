@@ -26,8 +26,6 @@ import scala.util.Random
   *         Jun 30, 2017 12:29
   */
 object UrlTransformer {
-  val log = LoggerFactory.getLogger(UrlTransformer.getClass.getName)
-
   /**
     * 符合跳转规则的URL正则表达式
     */
@@ -39,7 +37,6 @@ object UrlTransformer {
     } else {
       List.empty[Pattern]
     }
-
   /**
     * paramUrls为(正则表达式,参数名称)的列表，即符合正则表达式的url，会解析该
     * url包含的对应URL参数，以参数值作为实际URL变换结果
@@ -62,9 +59,31 @@ object UrlTransformer {
     } else {
       List.empty[(Pattern, String, String)]
     }
-
-
+  val log = LoggerFactory.getLogger(UrlTransformer.getClass.getName)
   val client = new HttpClientAgent(MyConf.zhinangConf)
+
+  def main(args: Array[String]): Unit = {
+    val testUrl = "https://www.google.com/url?sa=t&rct=j&q=&esrc=s" +
+      "&source=newssearch&cd=3&cad=rja&uact=8&ved=0ahUKEwiJnPyi9O" +
+      "TUAhWOZj4KHZSHBUoQqQIIKygAMAI&url=https%3A%2F%2Fwww.voachi" +
+      "nese.com%2Fa%2Fnews-investigation-launched-into-overseas-inv" +
+      "estment-by-companies-allegedly-related-to-top-leaders-201706" +
+      "22%2F3911671.html&usg=AFQjCNGZ_0IfBMQdI-KqwvPR7EcxfM-uzg"
+
+    val targetUrl = "https://www.voachinese.com/a/news-investigation-" +
+      "launched-into-overseas-investment-by-companies-allegedly-" +
+      "related-to-top-leaders-20170622/3911671.html"
+
+    assert(transform(testUrl) == targetUrl)
+
+    val jumpUrl = "https://www.baidu.com/link?url=n7Tas2jw_MEZvYrry" +
+      "uqF2LWALH1yHJIl551G2yVcno_&wd=&eqid=8e60662c0003326f00000003" +
+      "59561be3"
+
+    val jumpTargetUrl = ""
+
+    assert(jumpUrl == jumpTargetUrl)
+  }
 
   /**
     * 把URL根据规则进行变换，如果转换成功，返回Some(transformedUrl)
@@ -95,28 +114,5 @@ object UrlTransformer {
         }
       }
     }
-  }
-
-  def main(args: Array[String]): Unit = {
-    val testUrl = "https://www.google.com/url?sa=t&rct=j&q=&esrc=s" +
-      "&source=newssearch&cd=3&cad=rja&uact=8&ved=0ahUKEwiJnPyi9O" +
-      "TUAhWOZj4KHZSHBUoQqQIIKygAMAI&url=https%3A%2F%2Fwww.voachi" +
-      "nese.com%2Fa%2Fnews-investigation-launched-into-overseas-inv" +
-      "estment-by-companies-allegedly-related-to-top-leaders-201706" +
-      "22%2F3911671.html&usg=AFQjCNGZ_0IfBMQdI-KqwvPR7EcxfM-uzg"
-
-    val targetUrl = "https://www.voachinese.com/a/news-investigation-" +
-      "launched-into-overseas-investment-by-companies-allegedly-" +
-      "related-to-top-leaders-20170622/3911671.html"
-
-    assert(transform(testUrl) == targetUrl)
-
-    val jumpUrl = "https://www.baidu.com/link?url=n7Tas2jw_MEZvYrry" +
-      "uqF2LWALH1yHJIl551G2yVcno_&wd=&eqid=8e60662c0003326f00000003" +
-      "59561be3"
-
-    val jumpTargetUrl = ""
-
-    assert(jumpUrl == jumpTargetUrl)
   }
 }

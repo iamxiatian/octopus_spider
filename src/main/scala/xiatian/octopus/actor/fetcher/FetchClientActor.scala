@@ -28,16 +28,14 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
   val NEW_REQUEST = FetchRequest(fetcherId)
 
   implicit val timeout = Timeout(10 seconds) //crawler的时间
-
-  //如果长时间得不到服务器的返回相应，则自动发送NEW_REQUEST
-  var lastReceivedTaskTime = System.currentTimeMillis()
   val requestNew = "request"
   val tick = context.system.scheduler.schedule(
     0 millis,
     15000 millis,
     self,
     requestNew)
-
+  //如果长时间得不到服务器的返回相应，则自动发送NEW_REQUEST
+  var lastReceivedTaskTime = System.currentTimeMillis()
   var emptyCount = 0
 
   override def active(master: ActorRef): Actor.Receive = {

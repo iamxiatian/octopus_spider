@@ -25,25 +25,6 @@ import scala.xml.{Elem, XML}
   */
 object District {
 
-  private def makeCounties(cityCode: String, cityElem: Elem): List[County] =
-    (cityElem \ "County").map {
-      case countyElem: Elem =>
-        val code = (countyElem \ "@Code").text
-        val name = (countyElem \ "@Text").text
-
-        County(code, name, cityCode)
-    }.toList
-
-
-  private def makeCities(provinceCode: String, provinceElem: Elem): List[City] =
-    (provinceElem \ "City").map {
-      case cityElem: Elem =>
-        val cityCode = (cityElem \ "@Code").text
-        val cityName = (cityElem \ "@Text").text
-
-        City(cityCode, cityName, provinceCode, makeCounties(cityCode, cityElem))
-    }.toList
-
   val provinces: List[Province] = {
     val stream = getClass.getResourceAsStream("/district.xml")
 
@@ -56,7 +37,6 @@ object District {
         Province(provinceCode, provinceName, "CN", makeCities(provinceCode, e))
     }.toList
   }
-
   /**
     * 记录行政区域的代号到具体行政区域的映射关系
     */
@@ -66,12 +46,9 @@ object District {
   }.flatten.map {
     d => (d.code, d)
   }.toMap
-
   val cacheByName: Map[String, District] = cacheByCode.values.map {
     d => (d.name, d)
   }.toMap
-
-  private def isCode(s: String) = s.forall(_.isDigit)
 
   /**
     * 通过名称或者代号获取省份
@@ -91,11 +68,31 @@ object District {
       .filter(_.isInstanceOf[City])
       .map(_.asInstanceOf[City])
 
+  private def isCode(s: String) = s.forall(_.isDigit)
+
   def county(codeOrName: String): Option[County] =
     (if (isCode(codeOrName)) cacheByCode else cacheByName)
       .get(codeOrName)
       .filter(_.isInstanceOf[County])
       .map(_.asInstanceOf[County])
+
+  private def makeCities(provinceCode: String, provinceElem: Elem): List[City] =
+    (provinceElem \ "City").map {
+      case cityElem: Elem =>
+        val cityCode = (cityElem \ "@Code").text
+        val cityName = (cityElem \ "@Text").text
+
+        City(cityCode, cityName, provinceCode, makeCounties(cityCode, cityElem))
+    }.toList
+
+  private def makeCounties(cityCode: String, cityElem: Elem): List[County] =
+    (cityElem \ "County").map {
+      case countyElem: Elem =>
+        val code = (countyElem \ "@Code").text
+        val name = (countyElem \ "@Text").text
+
+        County(code, name, cityCode)
+    }.toList
 
 }
 

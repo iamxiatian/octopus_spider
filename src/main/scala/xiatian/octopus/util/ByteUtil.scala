@@ -27,18 +27,6 @@ object ByteUtil {
 
   def bytes2double(bytes: Array[Byte]): Double = ByteBuffer.wrap(bytes).getDouble
 
-  def hex2bytes(hex: String): Array[Byte] =
-    hex.replaceAll("[^0-9A-Fa-f]", "")
-      .sliding(2, 2)
-      .toArray
-      .map(Integer.parseInt(_, 16).toByte)
-
-  def bytes2hex(bytes: Array[Byte], sep: Option[String] = None): String =
-    sep match {
-      case None => bytes.map("%02x".format(_)).mkString
-      case Some(s) => bytes.map("%02x".format(_)).mkString(s)
-    }
-
   def example {
     val data = "48 65 6C 6C 6F 20 57 6F 72 6C 64 21 21"
     val bytes = hex2bytes(data)
@@ -52,5 +40,17 @@ object ByteUtil {
     val bytes3 = hex2bytes(data3)
     println(bytes2hex(bytes3))
   }
+
+  def hex2bytes(hex: String): Array[Byte] =
+    hex.replaceAll("[^0-9A-Fa-f]", "")
+      .sliding(2, 2)
+      .toArray
+      .map(Integer.parseInt(_, 16).toByte)
+
+  def bytes2hex(bytes: Array[Byte], sep: Option[String] = None): String =
+    sep match {
+      case None => bytes.map("%02x".format(_)).mkString
+      case Some(s) => bytes.map("%02x".format(_)).mkString(s)
+    }
 
 }

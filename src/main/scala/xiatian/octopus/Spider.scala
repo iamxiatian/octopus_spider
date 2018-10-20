@@ -20,19 +20,6 @@ import xiatian.octopus.inject.MonitorKeyword
   */
 object Spider extends App {
 
-  case class Config(master: Boolean = false,
-                    fetcher: Boolean = false,
-                    injectXmlFile: Option[String] = None,
-                    injectKeywordFile: Option[String] = None,
-                    license: Boolean = false,
-                    clear: Boolean = false,
-                    version: Boolean = false,
-                    test: Boolean = false,
-                    fromDate: Option[Date] = None,
-                    endDate: Option[Date] = None,
-                    outFile: Option[File] = None
-                   )
-
   val parser = new scopt.OptionParser[Config]("bin/spider") {
     head("Web Site Crawler", "1.0")
 
@@ -90,6 +77,31 @@ object Spider extends App {
     help("help").text("prints this usage text")
 
     note("\n xiatian, xia@ruc.edu.cn.")
+  }
+
+  def startMasterSystem(): Unit = {
+    val conf = ConfigFactory.parseString(
+      s"""
+         |akka.remote.netty.tcp.hostname = ${MyConf.masterHostname}
+         |akka.remote.netty.tcp.port = ${MyConf.masterPort}
+      """
+        .stripMargin
+    ).withFallback(MyConf.config)
+
+    //把conf对象传递给Settings，再有AkkaSystem.Master引用，继续后面的实例化过程
+    MyConf.akkaMasterConfig = Some(conf)
+
+    val servicePoint = s"${conf.getString("akka.remote.netty.tcp.hostname")}" +
+      s":${conf.getString("akka.remote.netty.tcp.port")}"
+
+    println(s"Master will run at $servicePoint")
+
+    Master.start()
+
+    sys.addShutdownHook {
+      Master.shutdown()
+      println("DONE.")
+    }
   }
 
   MyConf.configLog()
@@ -154,31 +166,6 @@ object Spider extends App {
     }
   }
 
-  def startMasterSystem(): Unit = {
-    val conf = ConfigFactory.parseString(
-      s"""
-         |akka.remote.netty.tcp.hostname = ${MyConf.masterHostname}
-         |akka.remote.netty.tcp.port = ${MyConf.masterPort}
-      """
-        .stripMargin
-    ).withFallback(MyConf.config)
-
-    //把conf对象传递给Settings，再有AkkaSystem.Master引用，继续后面的实例化过程
-    MyConf.akkaMasterConfig = Some(conf)
-
-    val servicePoint = s"${conf.getString("akka.remote.netty.tcp.hostname")}" +
-      s":${conf.getString("akka.remote.netty.tcp.port")}"
-
-    println(s"Master will run at $servicePoint")
-
-    Master.start()
-
-    sys.addShutdownHook {
-      Master.shutdown()
-      println("DONE.")
-    }
-  }
-
   def startFetchSystem(): Unit = {
     val conf = SpiderSystem.Fetcher.conf
     val system = SpiderSystem.Fetcher.akkaSystem
@@ -222,5 +209,18 @@ object Spider extends App {
       println("DONE.")
     }
   }
+
+  case class Config(master: Boolean = false,
+                    fetcher: Boolean = false,
+                    injectXmlFile: Option[String] = None,
+                    injectKeywordFile: Option[String] = None,
+                    license: Boolean = false,
+                    clear: Boolean = false,
+                    version: Boolean = false,
+                    test: Boolean = false,
+                    fromDate: Option[Date] = None,
+                    endDate: Option[Date] = None,
+                    outFile: Option[File] = None
+                   )
 
 }

@@ -1,4 +1,4 @@
-package xiatian.octopus.actor.master.db
+package xiatian.octopus.storage.master
 
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -6,16 +6,18 @@ import java.util.concurrent.ConcurrentHashMap
 
 import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.db.{Db, QueueMapDb}
 import xiatian.octopus.model.{FetchLink, FetchTask, LinkType}
+import xiatian.octopus.storage.{Db, QueueMapDb}
 
 import scala.util.{Failure, Success, Try}
 
 /**
-  * 需要抓取的爬行队列库，该队列中的URL都已经到了抓取时间，但由于系统资源限制，还没有被调度到。
+  * 需要抓取的爬行队列库，该队列中的URL都已经到了抓取时间，但由于系统资源限制，
+  * 还没有被调度到内存之中。
   */
-class CrawlDb(path: String, capacity: Int = 100000000)
+private class CrawlDb(path: String, capacity: Int = 100000000)
   extends QueueMapDb(path, capacity) {
+
   def pushLink(fetchLink: FetchLink) =
     enqueue(
       fetchLink.url.getBytes(StandardCharsets.UTF_8),
@@ -43,44 +45,6 @@ object CrawlDb extends Db {
 
   private val crawlDbs: ConcurrentHashMap[Int, CrawlDb] = new ConcurrentHashMap
   private val signatureDbs: ConcurrentHashMap[Int, SignatureDb] = new ConcurrentHashMap
-
-  private def getCrawlDb(t: LinkType): CrawlDb = {
-    val id = t.id
-    if (crawlDbs.contains(id)) {
-      crawlDbs.get(id)
-    } else {
-      //双重锁机制
-      synchronized {
-        val oldDb = crawlDbs.get(id)
-        if (oldDb == null) {
-          val db = new CrawlDb(new File(crawlPath, s"queue.$id").getCanonicalPath)
-          crawlDbs.put(id, db)
-          db
-        } else {
-          oldDb
-        }
-      }
-    }
-  }
-
-  private def getSignatureDb(t: LinkType): SignatureDb = {
-    val id = t.id
-    if (signatureDbs.contains(id)) {
-      signatureDbs.get(id)
-    } else {
-      //双重锁机制
-      synchronized {
-        val oldDb = signatureDbs.get(id)
-        if (oldDb == null) {
-          val db = new SignatureDb(new File(crawlPath, s"signature.$id").getCanonicalPath, 2000)
-          signatureDbs.put(id, db)
-          db
-        } else {
-          oldDb
-        }
-      }
-    }
-  }
 
   def open() = {
     println(s"crawl db and signature db will be opened dynamically.")
@@ -110,6 +74,47 @@ object CrawlDb extends Db {
     val link = getCrawlDb(t).popLink()
     if (link.nonEmpty) getSignatureDb(t).remove(link.get.urlHash)
     link
+  }
+
+  private def getCrawlDb(t: LinkType): CrawlDb = {
+    val id = t.id
+    if (crawlDbs.contains(id)) {
+      crawlDbs.get(id)
+    } else {
+      //双重锁机制
+      synchronized {
+        val oldDb = crawlDbs.get(id)
+        if (oldDb == null) {
+          val db = new CrawlDb(new File(crawlPath, s"queue.$id").getCanonicalPath)
+          crawlDbs.put(id, db)
+          db
+        } else {
+          oldDb
+        }
+      }
+    }
+  }
+
+  private def getSignatureDb(t: LinkType): SignatureDb = {
+    val id = t.id
+    if (signatureDbs.contains(id)) {
+      signatureDbs.get(id)
+    } else {
+      //双重锁机制
+      synchronized {
+        val oldDb = signatureDbs.get(id)
+        if (oldDb == null) {
+          val db = new SignatureDb(
+            s"crawl signature db($id)",
+            new File(crawlPath, s"signature.$id"),
+            2000)
+          signatureDbs.put(id, db)
+          db
+        } else {
+          oldDb
+        }
+      }
+    }
   }
 
   /**
