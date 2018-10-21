@@ -29,7 +29,7 @@ sealed trait LinkType {
 case object UnknownLink extends LinkType {
   override val id: Int = 0
 
-  def name: String = "UnknownLink"
+  override val name: String = "UnknownLink"
 }
 
 /**
@@ -38,7 +38,7 @@ case object UnknownLink extends LinkType {
 case object ArticleLink extends LinkType {
   override val id: Int = 1
 
-  def name: String = "ArticleLink"
+  override val name: String = "ArticleLink"
 
   override def extractor: Extractor = EmptyExtractor
 
@@ -51,7 +51,7 @@ case object ArticleLink extends LinkType {
 case object HubLink extends LinkType {
   override val id: Int = 2
 
-  def name: String = "HubPage"
+  override val name: String = "HubPage"
 
   override def extractor: Extractor = EmptyExtractor
 

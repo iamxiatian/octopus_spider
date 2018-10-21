@@ -6,8 +6,9 @@ import io.circe.Json
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.model.{FetchLink, FetchTask, LinkType}
+import xiatian.octopus.model.{FetchLink, LinkType}
 import xiatian.octopus.storage.master.{StatsDb, _}
+import xiatian.octopus.task.FetchTask
 
 import scala.concurrent.Future
 

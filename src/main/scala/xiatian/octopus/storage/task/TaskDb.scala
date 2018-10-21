@@ -15,7 +15,7 @@ object TaskDb extends NitriteDb(new File(MyConf.masterDbPath, "task.db")) {
   val topicCollection: NitriteCollection = db.getCollection("topic")
 
 
-  def saveTopic(topic: TopicTask): WriteResult = {
+  def saveTopicTask(topic: TopicTask): WriteResult = {
     val doc = new Document()
     topic.toMap.foreach {
       case (k, v) => doc.put(k, v)
@@ -28,13 +28,13 @@ object TaskDb extends NitriteDb(new File(MyConf.masterDbPath, "task.db")) {
     result
   }
 
-  def getTopics(): List[TopicTask] =
+  def getTopicTasks(): List[TopicTask] =
     topicCollection.find().asScala.flatMap {
       doc =>
         TopicTask(doc)
     }.toList
 
-  def getTopic(id: String): Option[TopicTask] =
+  def getTopicTask(id: String): Option[TopicTask] =
     topicCollection.find(Filters.eq("id", id)).asScala.flatMap {
       doc => TopicTask(doc)
     }.headOption
@@ -45,17 +45,11 @@ object TaskDb extends NitriteDb(new File(MyConf.masterDbPath, "task.db")) {
 
   def main(args: Array[String]): Unit = {
     //TaskDb.saveEngine(SearchEngine("1", "百度新闻", "http://news.baidu.com/w={}", "utf-8"))
-    saveTopic(TopicTask("1", "", "默认主题", List("北京", "上海", "山东"), List("1")))
+    //saveTopicTask(TopicTask("1", "", "默认主题", List("北京", "上海", "山东"), List("1")))
 
-    val engine = TaskDb.getEngine("1")
-    println(engine)
 
     println("_________________")
-
-    getEngines().foreach(println)
-
-    println("_________________")
-    println(getTopic("1"))
+    println(getTopicTask("1"))
 
     db.close()
   }

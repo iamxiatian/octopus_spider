@@ -1,6 +1,9 @@
 package xiatian.octopus.task
 
+import java.net.URLEncoder
+
 import org.slf4j.LoggerFactory
+import xiatian.octopus.model.{FetchLink, HubLink}
 
 /**
   * 主题搜索的引擎，例如百度新闻、知乎、搜索等
@@ -13,6 +16,7 @@ import org.slf4j.LoggerFactory
 case class TopicEngine(
                         id: String,
                         name: String,
+                        enabled: Boolean,
                         queryPattern: String,
                         encoding: String = "UTF-8"
                       ) {
@@ -22,6 +26,13 @@ case class TopicEngine(
     "queryPattern" -> queryPattern,
     "encoding" -> encoding
   )
+
+  def parseQuery(query: String): FetchLink = {
+    val q = URLEncoder.encode(query, encoding)
+    val url = queryPattern.replaceAll("\\{\\}", q)
+
+    FetchLink(url, None, None, 1, 0, HubLink, id)
+  }
 }
 
 object TopicEngine {
@@ -29,6 +40,7 @@ object TopicEngine {
 
   /**
     * 从conf/topic-engine.xml中加载主题引擎
+    *
     * @return
     */
   private def load(): Map[String, TopicEngine] = {
@@ -39,15 +51,22 @@ object TopicEngine {
       e =>
         val id = (e \ "@id").text.trim
         val name = (e \ "@name").text.trim
+        val enabled = (e \ "@enabled").text.trim
         val pattern = (e \ "query-pattern").text.trim
         val encoding = (e \ "query-pattern" \ "@encoding").text.trim
-        TopicEngine(id, name, pattern, if (encoding.isEmpty) "utf-8" else encoding)
+
+        TopicEngine(id,
+          name,
+          if (enabled.toLowerCase == "true") true else false,
+          pattern,
+          if (encoding.isEmpty) "utf-8" else encoding)
     }.filter {
       engine =>
         if (engine.id.isEmpty || engine.queryPattern.isEmpty) {
           LOG.warn(s"skip empty topic engine ==> $engine")
           false
-        } else true
+        } else
+          engine.enabled
     }.map {
       engine => (engine.id, engine)
     }.toMap
@@ -55,5 +74,5 @@ object TopicEngine {
 
   lazy val engines = load()
 
-
+  def apply(id: String): Option[TopicEngine] = engines.get(id)
 }

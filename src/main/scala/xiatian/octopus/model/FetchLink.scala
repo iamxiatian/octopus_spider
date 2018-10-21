@@ -26,7 +26,7 @@ import scala.util.{Failure, Success, Try}
   */
 case class FetchLink(url: String,
                      refer: Option[String] = None,
-                     anchor: String = "",
+                     anchor: Option[String] = None,
                      depth: Int = 0,
                      retries: Byte = 0, //最大为20,超过100则为20
                      `type`: LinkType,
@@ -48,18 +48,8 @@ case class FetchLink(url: String,
     dos.writeByte(FetchLink.VERSION)
     dos.writeUTF(url)
 
-    if (refer.isEmpty) {
-      dos.writeBoolean(false)
-    } else {
-      dos.writeBoolean(true)
-      dos.writeUTF(refer.get)
-    }
-
-    if (anchor == null) {
-      dos.writeUTF("")
-    } else {
-      dos.writeUTF(anchor)
-    }
+    dos.writeUTF(refer.getOrElse(""))
+    dos.writeUTF(anchor.getOrElse(""))
 
     dos.writeInt(depth)
     dos.writeByte(retries)
@@ -125,10 +115,12 @@ object FetchLink {
 
     val url = din.readUTF()
 
-    val hasRefer = din.readBoolean()
-    val refer = if (hasRefer) Some(din.readUTF()) else None
+    val referText = din.readUTF()
+    val refer = if (referText.isEmpty) None else Option(referText)
 
-    val anchor = din.readUTF()
+    val anchorText = din.readUTF()
+    val anchor = if (anchorText.isEmpty) None else Option(anchorText)
+
     val depth = din.readInt()
     val retries = din.readByte()
     val typeId = din.readInt()

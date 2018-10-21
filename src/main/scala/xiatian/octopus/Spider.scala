@@ -11,7 +11,6 @@ import xiatian.octopus.actor.SpiderSystem.Master
 import xiatian.octopus.actor.fetcher.{FetchClientActor, StatsClientActor}
 import xiatian.octopus.actor.master.UrlManager
 import xiatian.octopus.common.{BuildInfo, MyConf}
-import xiatian.octopus.inject.MonitorKeyword
 
 /**
   *
@@ -142,7 +141,7 @@ object Spider extends App {
         SpiderSystem.Master.system
 
         println(s"Inject keyword task from file ${config.injectKeywordFile.get}")
-        MonitorKeyword.injectFromFile(config.injectKeywordFile.get)
+        //MonitorKeyword.injectFromFile(config.injectKeywordFile.get)
         SpiderSystem.Master.shutdown()
       }
 

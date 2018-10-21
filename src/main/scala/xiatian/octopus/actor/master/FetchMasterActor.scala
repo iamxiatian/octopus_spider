@@ -7,8 +7,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy}
 import akka.remote.{AssociatedEvent, AssociationErrorEvent, AssociationEvent, DisassociatedEvent}
 import xiatian.octopus.actor.{EmptyFetchJob, FetchCode, FetchFailure, FetchRequest, FetchResult, FetchStatsReply, FetchStatsRequest, NormalFetchJob, ProxyIp}
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.model.FetchTask
 import xiatian.octopus.storage.master.{FetchLogDb, WaitDb}
+import xiatian.octopus.task.FetchTask
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
