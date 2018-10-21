@@ -68,13 +68,13 @@ object District {
       .filter(_.isInstanceOf[City])
       .map(_.asInstanceOf[City])
 
-  private def isCode(s: String) = s.forall(_.isDigit)
-
   def county(codeOrName: String): Option[County] =
     (if (isCode(codeOrName)) cacheByCode else cacheByName)
       .get(codeOrName)
       .filter(_.isInstanceOf[County])
       .map(_.asInstanceOf[County])
+
+  private def isCode(s: String) = s.forall(_.isDigit)
 
   private def makeCities(provinceCode: String, provinceElem: Elem): List[City] =
     (provinceElem \ "City").map {

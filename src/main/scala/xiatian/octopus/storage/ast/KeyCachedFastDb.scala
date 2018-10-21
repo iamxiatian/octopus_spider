@@ -1,7 +1,8 @@
-package xiatian.octopus.storage
+package xiatian.octopus.storage.ast
 
 import org.rocksdb.{Options, RocksDB, RocksIterator}
 import org.zhinang.util.cache.LruCache
+import xiatian.octopus.storage.Db
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

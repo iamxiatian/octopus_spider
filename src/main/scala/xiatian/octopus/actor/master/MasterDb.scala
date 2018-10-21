@@ -1,6 +1,5 @@
 package xiatian.octopus.actor.master
 
-import xiatian.octopus.actor.master.db._
 import xiatian.octopus.storage.Db
 import xiatian.octopus.storage.master._
 

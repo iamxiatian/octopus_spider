@@ -30,13 +30,13 @@ case class Multipart(_parts: Seq[MimeBodyPart] = Seq.empty[MimeBodyPart]) extend
       setContent(str, "text/plain;charset=utf-8")
     })
 
-  def add(part: MimeBodyPart): Multipart =
-    Multipart(_parts :+ part)
-
   def html(str: String) =
     add(new MimeBodyPart {
       setContent(str, "text/html;charset=utf-8")
     })
+
+  def add(part: MimeBodyPart): Multipart =
+    Multipart(_parts :+ part)
 
   def attach(file: File, name: Option[String] = None) =
     add(new MimeBodyPart {

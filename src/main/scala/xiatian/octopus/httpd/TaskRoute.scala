@@ -4,8 +4,8 @@ import akka.http.scaladsl.server.Directives.{path, _}
 import akka.http.scaladsl.server.Route
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import org.slf4j.LoggerFactory
-import xiatian.octopus.actor.master.db.XmlTaskDb
 import xiatian.octopus.httpd.HttpServer.settings
+import xiatian.octopus.storage.master.XmlTaskDb
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}

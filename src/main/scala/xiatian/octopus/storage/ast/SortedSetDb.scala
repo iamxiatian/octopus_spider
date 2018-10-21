@@ -1,4 +1,4 @@
-package xiatian.octopus.storage
+package xiatian.octopus.storage.ast
 
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.Arrays
@@ -8,7 +8,8 @@ import com.google.common.collect.Lists
 import com.google.common.primitives.Longs
 import org.rocksdb._
 import org.slf4j.LoggerFactory
-import xiatian.octopus.storage.ScoreUpdate.{ALWAYS, GT_OLD, LT_OLD, NEVER}
+import xiatian.octopus.storage.Db
+import xiatian.octopus.storage.ast.ScoreUpdate.{ALWAYS, GT_OLD, LT_OLD, NEVER}
 
 import scala.util.Try
 

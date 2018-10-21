@@ -1,4 +1,4 @@
-package xiatian.octopus.actor.master.db
+package xiatian.octopus.storage.master
 
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8

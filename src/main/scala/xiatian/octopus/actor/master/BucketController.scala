@@ -202,8 +202,6 @@ object BucketController extends MasterConfig {
   def markInBucket(link: FetchLink) =
     urlHashes.put(hashLong(link.url), System.currentTimeMillis())
 
-  def hashLong(s: String) = HashUtil.hashAsLong(s)
-
   def inBucket(link: FetchLink) = {
     val key = hashLong(link.url)
     if (urlHashes.containsKey(key)) {
@@ -219,6 +217,8 @@ object BucketController extends MasterConfig {
       }
     } else false
   }
+
+  def hashLong(s: String) = HashUtil.hashAsLong(s)
 
   /**
     * 向桶中注入链接，返回注入的不同类型的链接的名称和数量, List中的每一个数字对应于LinkType.all

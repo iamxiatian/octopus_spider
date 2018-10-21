@@ -1,4 +1,4 @@
-package xiatian.octopus.storage
+package xiatian.octopus.storage.ast
 
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import com.google.common.collect.Lists
 import org.rocksdb.{ColumnFamilyDescriptor, ColumnFamilyHandle, DBOptions, RocksDB}
 import org.slf4j.LoggerFactory
+import xiatian.octopus.storage.Db
 import xiatian.octopus.util.ByteUtil
 
 import scala.util.{Failure, Success, Try}
@@ -135,6 +136,33 @@ abstract class BaseDb(val dbName: String, val dbPath: File) extends Db {
   def hsaveInt(id: String, attrName: String, attrValue: Int): this.type =
     hset(id, attrName, ByteUtil.int2bytes(attrValue))
 
+  /**
+    * 保存数据到默认的Column Family中
+    */
+  def hset(id: String, attrName: String, attrValue: Array[Byte]): this.type =
+    hset(id, defaultHandler, attrName, attrValue)
+
+  /**
+    * 类似于Redis的Hash类型，保存数据
+    *
+    * @return
+    */
+  private def hset(id: String,
+                   handler: ColumnFamilyHandle,
+                   attrName: String,
+                   attrValue: Array[Byte]): this.type = Try {
+    //采用id:name = value的形式保存
+    val key = s"$id:$attrName".getBytes(UTF_8)
+
+    db.put(handler, key, attrValue)
+  } match {
+    case Success(_) => this
+    case Failure(e) =>
+      e.printStackTrace()
+      LOG.error(s"error when save $id (attrName=$attrName)", e)
+      this
+  }
+
   def hsaveDouble(id: String, attrName: String, attrValue: Double): this.type =
     hset(id, attrName, ByteUtil.double2bytes(attrValue))
 
@@ -162,31 +190,4 @@ abstract class BaseDb(val dbName: String, val dbPath: File) extends Db {
     */
   def hsave(id: String, attrName: String, attrValue: String): this.type =
     hset(id, attrName, attrValue.getBytes(UTF_8))
-
-  /**
-    * 保存数据到默认的Column Family中
-    */
-  def hset(id: String, attrName: String, attrValue: Array[Byte]): this.type =
-    hset(id, defaultHandler, attrName, attrValue)
-
-  /**
-    * 类似于Redis的Hash类型，保存数据
-    *
-    * @return
-    */
-  private def hset(id: String,
-                   handler: ColumnFamilyHandle,
-                   attrName: String,
-                   attrValue: Array[Byte]): this.type = Try {
-    //采用id:name = value的形式保存
-    val key = s"$id:$attrName".getBytes(UTF_8)
-
-    db.put(handler, key, attrValue)
-  } match {
-    case Success(_) => this
-    case Failure(e) =>
-      e.printStackTrace()
-      LOG.error(s"error when save $id (attrName=$attrName)", e)
-      this
-  }
 }

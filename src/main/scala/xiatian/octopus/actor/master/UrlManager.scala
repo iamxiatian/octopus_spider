@@ -5,10 +5,9 @@ import java.text.SimpleDateFormat
 import io.circe.Json
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
-import xiatian.octopus.actor.master.db.StatsDb
 import xiatian.octopus.common.MyConf
 import xiatian.octopus.model.{FetchLink, FetchTask, LinkType}
-import xiatian.octopus.storage.master._
+import xiatian.octopus.storage.master.{StatsDb, _}
 
 import scala.concurrent.Future
 
@@ -27,6 +26,9 @@ object UrlManager extends MasterConfig {
     FetchedSignatureDb.put(link.urlHash)
     removeFetching(link)
   }
+
+  def removeFetching(link: FetchLink) =
+    FetchingSignatureDb.remove(link.urlHash)
 
   /**
     * 设置url, 该主键10分钟后过期. urlFetching表示的是正在由某个爬虫客户端在抓取的链接，避免
@@ -47,9 +49,6 @@ object UrlManager extends MasterConfig {
       markUnknownHost(link.getHost)
     }
   }
-
-  def removeFetching(link: FetchLink) =
-    FetchingSignatureDb.remove(link.urlHash)
 
   private def markUnknownHost(host: String) = BadLinkDb.saveHost(host)
 

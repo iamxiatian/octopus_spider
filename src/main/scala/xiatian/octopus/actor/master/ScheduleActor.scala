@@ -126,4 +126,5 @@ object ScheduleActor {
   case object Scheduling
 
   case object MailJob extends ScheduleJob
+
 }

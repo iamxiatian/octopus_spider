@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.storage.KeyCachedFastDb
+import xiatian.octopus.storage.ast.KeyCachedFastDb
 import xiatian.octopus.task.Board
 
 object BoardDb extends

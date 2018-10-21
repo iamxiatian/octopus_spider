@@ -1,4 +1,4 @@
-package xiatian.octopus.storage
+package xiatian.octopus.storage.ast
 
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicInteger
@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.google.common.collect.Lists
 import com.google.common.primitives.Ints
 import org.rocksdb._
+import xiatian.octopus.storage.Db
 
 import scala.util.Try
 

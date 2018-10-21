@@ -55,6 +55,8 @@ class Bucket(val idx: Int, val maxSize: Int) {
 
   def putFirst(link: FetchLink): Unit = getQueue(link.`type`).putFirst(link)
 
+  def takeLast(t: LinkType): FetchLink = getQueue(t).takeLast()
+
   private def getQueue(t: LinkType): FetchQueue =
     if (queues.containsKey(t.id)) {
       queues.get(t.id)
@@ -63,8 +65,6 @@ class Bucket(val idx: Int, val maxSize: Int) {
       queues.put(t.id, q)
       q
     }
-
-  def takeLast(t: LinkType): FetchLink = getQueue(t).takeLast()
 
   def getLinks(t: LinkType): Seq[FetchLink] = getQueue(t).links
 

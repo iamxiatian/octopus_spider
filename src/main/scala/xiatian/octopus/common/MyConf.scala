@@ -83,11 +83,8 @@ object MyConf {
 
     map
   }
-  //采集结果保存到的数据库类型
-  lazy val dbTypes = getString("db.type").split(",").map(_.trim.toLowerCase).toSet
-  lazy val mongoUrl = getString("db.mongo.url")
-  lazy val mongoDbName = getString("db.mongo.dbName")
-  lazy val elasticSearchHttpUrl = getString("db.elasticSearch.http.url")
+
+
   lazy val masterHostname = getString("master.hostname")
   lazy val masterPort = getInt("master.port")
   lazy val masterRobinCount = getInt("master.robinCount")
@@ -104,8 +101,10 @@ object MyConf {
       if (regex == "") None else Some(regex.r)
     } else None
   masterDbPath.mkdirs()
+
   lazy val articleCheckDuplicate = getBoolean("article.checkDuplicate")
   lazy val saveHtmlFormat = getBoolean("article.saveHtmlFormat")
+
   /**
     * 返回触发的时间点（每一个时间点都是一对整数： (小时, 分钟)）
     */
@@ -117,68 +116,22 @@ object MyConf {
           val parts = t.split(":").map(_ toInt)
           (parts(0), parts(1))
       }.toList
+
   lazy val mailNotify = getBoolean("scheduler.mail.notify") //是否启用邮件通知
-  // 作者头像目录
-  lazy val avatarAuthorDir = new File(getString("book.avatar.author.dir"))
-  // Bing学术搜索的入口
-  lazy val bingAcademicPoint = getString("book.bing.academic.point")
-  lazy val amazonSearchPoint = getString("book.amazon.search.point")
-  //存放图书的位置
-  lazy val bookFtpHost = MyConf.getString("book.ftp.host")
-  lazy val bookFtpPort = MyConf.getInt("book.ftp.port")
-  lazy val bookFtpUser = MyConf.getString("book.ftp.user")
-  lazy val bookFtpPassword = MyConf.getString("book.ftp.password")
-  lazy val bookFtpPrefix = MyConf.getString("book.ftp.prefix")
-  //CoreNLPs所在的计算机地址
-  lazy val nlpServerHost = {
-    val host = getString("nlp.stanford.host")
-    if (!host.toLowerCase().startsWith("http")) s"http://$host" else host
-  }
-  //val workSyncInterval = getInt("book.work.sync.interval")
-  lazy val nlpServerPort = getInt("nlp.stanford.port")
-  lazy val nlpAnnotators = getString("nlp.stanford.annotators")
-  lazy val opennlpModelDir = new File(getString("nlp.apache.model.dir"))
+
   val version = BuildInfo.version
+
   /**
     * 最大保留的时间值，以秒为单位；例如，抓取时间超过该数值的链接将会抛弃掉
     */
   val MaxTimeSeconds = DateTime.parse("2999-01-01").getMillis / 1000
+
   /**
     * 获取爬虫的标记名称
     */
   val fetcherId: String = Machine.getLocalIp.getOrElse("127.0.0.1")
-  //作品每次注入的时间间隔
-  val workInjectInterval = getInt("book.work.inject.interval")
+
   val screenConfigText: String = {
-    val mysqlConfigLines =
-      if (dbTypes.contains("mysql"))
-        List(s"msyql url ==> ${getString("db.book.mysql.url")}",
-          s"msyql driver ==> ${getString("db.book.mysql.driver")}",
-          s"msyql user ==> ${getString("db.book.mysql.user")}",
-          s"msyql password ==> ${getString("db.book.mysql.password")}"
-        )
-      else List.empty[String]
-
-    val mongoConfigLines =
-      if (dbTypes.contains("mongodb"))
-        List(
-          s"mongo url ==> ${mongoUrl}",
-          s"mongo splitCollection ==> ${splitCollection}"
-        )
-      else List.empty[String]
-
-
-    val pgConfigLines =
-      if (dbTypes.contains("es"))
-        List(
-          s"postgres url ==> ${getString("db.book.pg.url")}",
-          s"postgres driver ==> ${getString("db.book.pg.driver")}",
-          s"postgres user ==> ${getString("db.book.pg.user")}",
-          s"postgres password ==> ${getString("db.book.pg.password")}"
-        )
-      else List.empty[String]
-
-    val dbConfigLines = mysqlConfigLines ::: mongoConfigLines ::: pgConfigLines
 
     val scheduleConfigLines = {
       if (mailNotify) {
@@ -246,30 +199,8 @@ object MyConf {
        |│   ├── numOfFetchClientActors ==> ${getInt("fetcher.numOfFetchClientActors")}
        |│   └── parseDataPageLinks ==> ${getBoolean("fetcher.parseDataPageLinks")}
        |│
-       |├── injector config:
-       |│   └── work interval seconds ==> ${workInjectInterval}
-       |│
-       |├── NLP config:
-       |│   ├── apache opennlp model dir ==> ${opennlpModelDir.getCanonicalPath}
-       |│   ├── stanford nlp server host ==> $nlpServerHost
-       |│   ├── stanford nlp server port ==> $nlpServerPort
-       |│   └── stanford nlp annotators ==> $nlpAnnotators
-       |│
-       |├── Book config:
-       |│   ├── Amazon search point ==> $amazonSearchPoint
-       |│   ├── Bing academic point ==> $bingAcademicPoint
-       |│   ├── FTP host ==> $bookFtpHost
-       |│   ├── FTP port ==> $bookFtpPort
-       |│   ├── FTP user ==> $bookFtpUser
-       |│   ├── FTP password ==> $bookFtpPassword
-       |│   ├── FTP prefix ==> $bookFtpPrefix
-       |│   └── author avatar dir ==> ${avatarAuthorDir.getCanonicalPath}
-       |│
        |├── scheduler config:
        |${lineToString(scheduleConfigLines)}
-       |│
-       |├── database config:
-       |${lineToString(dbConfigLines)}
        |│
        |├── speed control list:
        |${lineToString(speedConfigLines)}
@@ -279,6 +210,7 @@ object MyConf {
        |
        |""".stripMargin
   }
+
   /** AkkaSystem使用的配置类，其启动时需要指定该类 */
   var akkaMasterConfig: Option[Config] = None
 

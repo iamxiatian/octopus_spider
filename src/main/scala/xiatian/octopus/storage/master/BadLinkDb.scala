@@ -72,8 +72,6 @@ class BadLinkDb(path: String,
 
   def saveUrl(url: String): Unit = save(url, BadLinkType.DeadUrl)
 
-  def saveHost(host: String): Unit = save(host, BadLinkType.UnknownHost)
-
   /**
     * 把URL保存到数据库中
     *
@@ -91,6 +89,8 @@ class BadLinkDb(path: String,
     notHitCache.remove(url)
     hitCache.put(url, time)
   }
+
+  def saveHost(host: String): Unit = save(host, BadLinkType.UnknownHost)
 
   def removeUrl(url: String): Unit = remove(url, BadLinkType.DeadUrl)
 

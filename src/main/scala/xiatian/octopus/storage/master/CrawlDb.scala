@@ -7,7 +7,8 @@ import java.util.concurrent.ConcurrentHashMap
 import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
 import xiatian.octopus.model.{FetchLink, FetchTask, LinkType}
-import xiatian.octopus.storage.{Db, QueueMapDb}
+import xiatian.octopus.storage.Db
+import xiatian.octopus.storage.ast.QueueMapDb
 
 import scala.util.{Failure, Success, Try}
 
@@ -70,12 +71,6 @@ object CrawlDb extends Db {
       false
   }
 
-  def popLink(t: LinkType) = {
-    val link = getCrawlDb(t).popLink()
-    if (link.nonEmpty) getSignatureDb(t).remove(link.get.urlHash)
-    link
-  }
-
   private def getCrawlDb(t: LinkType): CrawlDb = {
     val id = t.id
     if (crawlDbs.contains(id)) {
@@ -93,6 +88,27 @@ object CrawlDb extends Db {
         }
       }
     }
+  }
+
+  def popLink(t: LinkType) = {
+    val link = getCrawlDb(t).popLink()
+    if (link.nonEmpty) getSignatureDb(t).remove(link.get.urlHash)
+    link
+  }
+
+  /**
+    * URL是否已经在队列中了
+    *
+    * @param link
+    * @return
+    */
+  def has(link: FetchLink): Boolean = {
+    val expiredSeconds = FetchTask.get(link).map {
+      task =>
+        task.nextFetchSeconds(link).getOrElse(MyConf.MaxTimeSeconds)
+    }.getOrElse(MyConf.MaxTimeSeconds)
+
+    getSignatureDb(link.`type`).has(link.urlHash, expiredSeconds)
   }
 
   private def getSignatureDb(t: LinkType): SignatureDb = {
@@ -115,21 +131,6 @@ object CrawlDb extends Db {
         }
       }
     }
-  }
-
-  /**
-    * URL是否已经在队列中了
-    *
-    * @param link
-    * @return
-    */
-  def has(link: FetchLink): Boolean = {
-    val expiredSeconds = FetchTask.get(link).map {
-      task =>
-        task.nextFetchSeconds(link).getOrElse(MyConf.MaxTimeSeconds)
-    }.getOrElse(MyConf.MaxTimeSeconds)
-
-    getSignatureDb(link.`type`).has(link.urlHash, expiredSeconds)
   }
 
   def queueSize(t: LinkType) = getCrawlDb(t).count()
