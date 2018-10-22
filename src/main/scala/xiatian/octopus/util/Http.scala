@@ -104,6 +104,14 @@ object Http {
     }
   }
 
+  /**
+    * 获取URL的文件类型，即不带点的文件后缀名。例如:http://www.test.com/123.jpg?id=1，
+    * 返回 jpg
+    *
+    * @param url
+    * @param defaultValue 如果url不存在扩展名时，返回该值
+    * @return 不带点和参数信息的文件后缀名，如html, jpg等
+    */
   def getFileType(url: String, defaultValue: String): String =
     if (!url.contains("."))
       defaultValue

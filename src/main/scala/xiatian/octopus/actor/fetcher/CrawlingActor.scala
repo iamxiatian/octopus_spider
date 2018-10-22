@@ -1,15 +1,8 @@
 package xiatian.octopus.actor.fetcher
 
-import java.io.ByteArrayInputStream
-
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import xiatian.octopus.actor.{Fetch, FetchCode, FetchResult}
 import xiatian.octopus.util.Http
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 /**
   * 真正执行抓取的爬虫Actor
@@ -38,17 +31,11 @@ class CrawlingActor(storeClient: ActorRef) extends Actor with ActorLogging {
           //TODO: 根据设置信息：把采集到的内容保存起来
           // pageCacheActor ! CachingPage(link.url, link.`type`, response.getContent, response.getEncoding)
 
-          val doc: Document = Jsoup.parse(
-            new ByteArrayInputStream(response.getContent),
-            response.getEncoding,
-            link.url
-          )
-
           val extractor = link.`type`.extractor
 
-          Await.result(extractor.extract(link, doc, proxyHolder), 60 seconds) match {
-            case Left(msg) =>
-              sender() ! FetchResult(fetcherId, FetchCode.Error, link, message = Some(msg))
+          extractor.extract(link, context, response, proxyHolder) match {
+            case Left(e) =>
+              sender() ! FetchResult(fetcherId, FetchCode.Error, link, message = Option(e.toString))
 
             case Right(result) =>
               storeClient ! result
@@ -59,7 +46,7 @@ class CrawlingActor(storeClient: ActorRef) extends Actor with ActorLogging {
         case e: Throwable =>
           println(s"Fetch error, url: ${link.url}, error: ${e}")
           log.error(e, s"Still got fetch error: ${link}, maybe you were blocked!")
-          sender() ! FetchResult(fetcherId, FetchCode.PARSE_ERROR, link, message = Some(e.toString))
+          sender() ! FetchResult(fetcherId, FetchCode.PARSE_ERROR, link, message = Option(e.toString))
       }
   }
 

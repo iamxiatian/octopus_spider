@@ -39,6 +39,14 @@ case class TopicTask(id: String,
       TopicEngine.engines.map(_._2).map(_.parseQuery(keyword))
   }
 
+  /**
+    * 根据url和锚文本，以及所在的页面链接，转换为FetchLink对象
+    *
+    * @param link
+    * @param urlAnchorPairs
+    * @return
+    */
+  override def makeChildLinks(link: FetchLink, urlAnchorPairs: Map[String, String]): List[FetchLink] = ???
 }
 
 object TopicTask {

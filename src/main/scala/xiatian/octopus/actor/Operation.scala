@@ -4,6 +4,7 @@ import org.joda.time.DateTime
 import org.zhinang.protocol.http.UrlResponse
 import xiatian.octopus.FastSerializable
 import xiatian.octopus.model.FetchLink
+import xiatian.octopus.task.FetchTask
 
 /**
   * 在各个Actor之间进行通信的对象
@@ -43,7 +44,7 @@ final case class EmptyFetchJob() extends FetchJob
 /**
   * 爬虫任务的上下文信息，由Master传递到Client
   */
-final case class Context() extends FastSerializable
+final case class Context(task: FetchTask) extends FastSerializable
 
 final case class NormalFetchJob(link: FetchLink,
                                 context: Context,

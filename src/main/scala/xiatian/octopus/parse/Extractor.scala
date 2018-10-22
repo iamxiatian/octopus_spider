@@ -1,27 +1,26 @@
 package xiatian.octopus.parse
 
-import org.jsoup.nodes.Document
-import xiatian.octopus.actor.ProxyIp
+import org.zhinang.protocol.http.UrlResponse
+import xiatian.octopus.actor.{Context, ProxyIp}
 import xiatian.octopus.model.FetchLink
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 /**
   * 抽取器的特质
   */
 trait Extractor {
   def extract(link: FetchLink,
-              doc: Document,
+              context: Context,
+              response: UrlResponse,
               proxyHolder: Option[ProxyIp]
-             ): Future[Either[String, ExtractResult]]
+             ): Either[Throwable, ExtractResult]
 }
 
 case object EmptyExtractor extends Extractor {
   def extract(link: FetchLink,
-              doc: Document,
+              context: Context,
+              response: UrlResponse,
               proxyHolder: Option[ProxyIp]
-             ): Future[Either[String, ExtractResult]] = Future(
+             ): Either[Throwable, ExtractResult] =
     Right(ExtractResult(link, List.empty[FetchLink], Map.empty[String, Any]))
-  )
+
 }

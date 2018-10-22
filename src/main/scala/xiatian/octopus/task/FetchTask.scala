@@ -40,6 +40,16 @@ trait FetchTask {
     * @return
     */
   def entryLinks: List[FetchLink]
+
+
+  /**
+    * 根据url和锚文本，以及所在的页面链接，转换为FetchLink对象
+    *
+    * @param link
+    * @param urlAnchorPairs
+    * @return
+    */
+  def makeChildLinks(link: FetchLink, urlAnchorPairs: Map[String, String]): List[FetchLink]
 }
 
 /**
@@ -85,7 +95,11 @@ private[task] trait ArticleHubTask extends FetchTask {
 object FetchTask {
   private val LOG = LoggerFactory.getLogger(FetchTask.getClass)
 
-  def context(taskId: String): Option[Context] = Some(Context())
+  def context(taskId: String): Option[Context] = Option {
+    //@TODO 修改此处
+    //Context(FetchTask(""))
+    null
+  }
 
   def count(): Int = 0
 

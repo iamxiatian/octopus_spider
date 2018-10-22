@@ -28,12 +28,15 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
   val NEW_REQUEST = FetchRequest(fetcherId)
 
   implicit val timeout = Timeout(10 seconds) //crawler的时间
-  val requestNew = "request"
+
+  case object RequestAsk
+
   val tick = context.system.scheduler.schedule(
     0 millis,
     15000 millis,
     self,
-    requestNew)
+    RequestAsk)
+
   //如果长时间得不到服务器的返回相应，则自动发送NEW_REQUEST
   var lastReceivedTaskTime = System.currentTimeMillis()
   var emptyCount = 0
@@ -41,7 +44,7 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
   override def active(master: ActorRef): Actor.Receive = {
     case op: FetchRequest => master ! op
 
-    case `requestNew` =>
+    case RequestAsk =>
       //如果5分钟内没有接收到过任务，则自动向master发起任务请求
       if (System.currentTimeMillis() - lastReceivedTaskTime > 300000)
         master ! NEW_REQUEST
@@ -57,6 +60,7 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
           val delay = if (millis > 120000) 12000 else millis
           Thread.sleep(delay)
           master ! NEW_REQUEST
+
         case NormalFetchJob(link, context, proxyHolder) =>
           log.debug(s"fetch: $link")
           print("\uD83D\uDE0A") // 取到正常任务的符号：😊
