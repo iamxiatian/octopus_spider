@@ -1,8 +1,13 @@
 package xiatian.octopus.task
 
+import java.io.{ByteArrayInputStream, DataInputStream}
+
 import org.slf4j.LoggerFactory
 import xiatian.octopus.actor.Context
+import xiatian.octopus.common.OctopusException
 import xiatian.octopus.model._
+
+import scala.util.{Failure, Success, Try}
 
 
 /**
@@ -10,6 +15,7 @@ import xiatian.octopus.model._
   * 针对某个关键词的定向采集。
   */
 trait FetchTask {
+
   /** 任务 ID */
   def id: String
 
@@ -17,7 +23,7 @@ trait FetchTask {
   def name: String
 
   /** 该任务下可以处理的链接类型 */
-  def types: Set[LinkType] = Set.empty
+  def supportedLinkTypes: Set[LinkType] = Set.empty
 
   /**
     * 是否接收该链接，作为本任务的一个抓取链接. 如果可以，返回link，否则返回None
@@ -50,6 +56,13 @@ trait FetchTask {
     * @return
     */
   def makeChildLinks(link: FetchLink, urlAnchorPairs: Map[String, String]): List[FetchLink]
+
+  /**
+    * 把任务转换成二进制字节类型, 开始包含了两个整数，用于标记任务的类型和数据版本
+    *
+    * @return
+    */
+  def toBytes: Array[Byte]
 }
 
 /**
@@ -61,7 +74,7 @@ private[task] trait ArticleHubTask extends FetchTask {
   def secondInterval: Long
 
   /** 该任务下可以处理的链接类型 */
-  override def types: Set[LinkType] = Set(ArticleLink, HubLink)
+  override def supportedLinkTypes: Set[LinkType] = Set(ArticleLink, HubLink)
 
   /**
     * 是否接收该链接，作为本任务的一个抓取链接. 如果可以，返回link，否则返回None
@@ -94,6 +107,32 @@ private[task] trait ArticleHubTask extends FetchTask {
 
 object FetchTask {
   private val LOG = LoggerFactory.getLogger(FetchTask.getClass)
+
+  val TASK_TYPE_SITE = 1
+  val TASK_TYPE_TOPIC = 2
+
+  def apply(bytes: Array[Byte]): Option[FetchTask] = Try {
+    val din = new DataInputStream(new ByteArrayInputStream(bytes))
+
+    val taskType = din.readInt()
+    val version = din.readInt()
+    taskType match {
+      case TASK_TYPE_SITE =>
+
+      case _ =>
+        throw new OctopusException(s"Unsupport fetch task $taskType")
+    }
+
+    val url = din.readUTF()
+    din: DataInputStream
+    ArticleSiteTask()
+
+  } match {
+    case Success(t) => Option(t)
+    case Failure(e) =>
+      LOG.error("error restore fetch task.", e)
+      None
+  }
 
   def context(taskId: String): Option[Context] = Option {
     //@TODO 修改此处

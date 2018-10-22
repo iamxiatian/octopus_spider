@@ -1,6 +1,5 @@
 package xiatian.octopus.task
 
-import org.dizitart.no2.Document
 import xiatian.octopus.model.FetchLink
 
 /**
@@ -39,6 +38,10 @@ case class TopicTask(id: String,
       TopicEngine.engines.map(_._2).map(_.parseQuery(keyword))
   }
 
+
+  /** 唯一的任务类型 */
+  override def `type`: Int = FetchTask.TASK_TYPE_SITE
+
   /**
     * 根据url和锚文本，以及所在的页面链接，转换为FetchLink对象
     *
@@ -47,16 +50,4 @@ case class TopicTask(id: String,
     * @return
     */
   override def makeChildLinks(link: FetchLink, urlAnchorPairs: Map[String, String]): List[FetchLink] = ???
-}
-
-object TopicTask {
-  def apply(doc: Document): Option[TopicTask] = if (doc == null) None else {
-    val id = doc.get("id").asInstanceOf[String]
-    val userId = doc.get("userId").asInstanceOf[String]
-    val name = doc.get("name").asInstanceOf[String]
-    val keywords = doc.get("keywords").asInstanceOf[String].split(",").map(_.trim).toList
-    val maxDepth = doc.get("maxDepth").asInstanceOf[Int]
-    val secondInterval = doc.get("secondInterval").asInstanceOf[Long]
-    Some(TopicTask(id, userId, name, keywords, maxDepth, secondInterval))
-  }
 }

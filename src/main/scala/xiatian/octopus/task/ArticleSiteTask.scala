@@ -1,5 +1,7 @@
 package xiatian.octopus.task
 
+import java.io.{ByteArrayOutputStream, DataOutputStream}
+
 import xiatian.octopus.model.{ArticleLink, FetchLink, HubLink}
 
 /**
@@ -59,4 +61,42 @@ case class ArticleSiteTask(id: String,
           } else None
       }.toList
     }
+
+  /**
+    * 把任务转换成二进制字节类型, 开始包含了两个整数，用于标记任务的类型和数据版本
+    *
+    * @return
+    */
+  override def toBytes: Array[Byte] = {
+    val out = new ByteArrayOutputStream()
+    val dos = new DataOutputStream(out)
+
+    dos.writeInt(FetchTask.TASK_TYPE_SITE)
+    dos.writeInt(1) //version
+
+    dos.writeUTF(id)
+    dos.writeUTF(name)
+    dos.writeUTF(homepage)
+
+    dos.writeInt(entryUrls.size)
+    entryUrls.foreach(dos.writeUTF)
+
+    dos.writeInt(articleUrlPatterns.size)
+    articleUrlPatterns.foreach(dos.writeUTF)
+
+    dos.writeInt(acceptUrlPatterns.size)
+    acceptUrlPatterns.foreach(dos.writeUTF)
+
+
+    dos.writeInt(denyUrlPatterns.size)
+    denyUrlPatterns.foreach(dos.writeUTF)
+
+    dos.writeLong(secondInterval)
+    dos.writeInt(maxDepth)
+    dos.writeInt(minAnchorLength)
+
+    dos.close()
+    out.close()
+    out.toByteArray
+  }
 }

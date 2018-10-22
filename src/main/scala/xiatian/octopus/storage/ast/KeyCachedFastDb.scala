@@ -20,7 +20,7 @@ import scala.util.Try
 class KeyCachedFastDb(path: String, cacheSize: Int = 2000) extends Db {
   RocksDB.loadLibrary()
 
-  val keys = {
+  val keys: mutable.SortedSet[Array[Byte]] = {
     implicit val o = new math.Ordering[Array[Byte]] {
       def compare(a: Array[Byte], b: Array[Byte]): Int = {
         if (a eq null) {
