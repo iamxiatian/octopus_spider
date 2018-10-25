@@ -87,9 +87,9 @@ object BucketController extends MasterConfig {
           val host = link.getHost.toLowerCase
           if (MyConf.speedControlMap.containsKey(host)) {
             //判断是否需要根据域名进行限速
-            val intervalMillis = 1000L * {
-              val item = MyConf.speedControlMap.getOrDefault(host, (0, 0))
-              val gap = item._2 - item._1
+            val intervalMillis = {
+              val item = MyConf.speedControlMap.getOrDefault(host, (0L, 0L))
+              val gap: Int = (item._2 - item._1).toInt
 
               //如果间隔大于0，则生成一个随机数，和最小数值相加，作为实际的限速数值
               //否则直接取第一个数值
@@ -100,7 +100,7 @@ object BucketController extends MasterConfig {
             }
 
             val lastRequestTimeMillis =
-              domainSpeedMillisRequestMap.getOrDefault(host, 0)
+              domainSpeedMillisRequestMap.getOrDefault(host, 0L)
 
             if (intervalMillis == 0)
               Some(link) //不需要限速
