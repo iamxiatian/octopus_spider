@@ -30,11 +30,26 @@ object Http {
 
   def get(url: String): UrlResponse = get(url, "", None, "text/html")
 
+  /**
+    * 通过代理获取网页信息
+    *
+    * @param url
+    * @param proxyAddress "host:ip"的形式，例如："101.204.175.122"
+    * @return
+    */
+  def getFromProxy(url: String, proxyAddress: String): UrlResponse = {
+    val (host, port) = proxyAddress.split(":").toList match {
+      case a :: b :: _ => (a, b.toInt)
+      case _ => ("", 0)
+    }
+
+    get(url, "", Option(ProxyIp(host, port, System.currentTimeMillis() + 10000)), "text/html")
+  }
+
   def get(url: String,
           refer: String,
           proxyHolder: Option[ProxyIp],
           contentType: String): UrlResponse = {
-
     if (clients.size > 100) {
       val keys = clients.keys
       keys.foreach {

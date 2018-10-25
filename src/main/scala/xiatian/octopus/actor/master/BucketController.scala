@@ -25,7 +25,14 @@ import scala.util.Random
   */
 object BucketController extends MasterConfig {
   val log = LoggerFactory.getLogger("BucketController")
-  val picker: BucketPicker = SimplePicker
+
+  val picker: BucketPicker =
+    MyConf.getString("master.bucket.picker", "simple").toLowerCase match {
+      case "advanced" => AdvancedPicker
+      case "random" => RandomPicker
+      case _ => SimplePicker
+    }
+
   /**
     * Master维持的桶对象，每个桶里面存放了一定数量的抓取链接，
     */

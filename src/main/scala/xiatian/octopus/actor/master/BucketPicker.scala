@@ -23,6 +23,15 @@ object SimplePicker extends BucketPicker {
   }
 }
 
+/**
+  * 根据时间随机挑选一个桶
+  */
+object RandomPicker extends BucketPicker {
+  def pickIdx(link: FetchLink): BucketIdx = {
+    (System.currentTimeMillis() % BucketController.numberOfBuckets).toInt
+  }
+}
+
 object AdvancedPicker extends BucketPicker {
   //TODO
   def pickIdx(link: FetchLink): BucketIdx = {

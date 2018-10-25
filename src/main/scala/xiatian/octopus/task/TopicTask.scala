@@ -38,10 +38,6 @@ case class TopicTask(id: String,
       TopicEngine.engines.map(_._2).map(_.parseQuery(keyword))
   }
 
-
-  /** 唯一的任务类型 */
-  override def `type`: Int = FetchTask.TASK_TYPE_SITE
-
   /**
     * 根据url和锚文本，以及所在的页面链接，转换为FetchLink对象
     *
