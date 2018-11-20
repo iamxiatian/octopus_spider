@@ -1,0 +1,176 @@
+%!TEX TS-program = xelatex
+%!TEX encoding = UTF-8 Unicode
+% !Mode:: "TeX:UTF-8"
+
+\documentclass[a4paper,12pt]{article}
+\usepackage[a4paper,hmargin=1in,vmargin=1in]{geometry} % 用Microsoft Office 中Word 的默认页边距
+\usepackage{multicol}
+\setlength{\columnsep}{1.0cm} %分栏之间的空隙间隔
+
+\usepackage{comment}
+\usepackage{ulem} %下划线，强调处理
+\usepackage{pifont} %非常有用的特殊符号集合
+\usepackage{ xunicode, xltxtra, fancybox, setspace,xcolor}
+
+\usepackage{fontspec}
+\newfontfamily\Monaco{Monaco} %自定义指定字体，Monaco字体适用于程序代码
+
+\usepackage[CJKmath=true,CJKchecksingle]{xeCJK}
+\XeTeXlinebreaklocale "zh"  
+\XeTeXlinebreakskip = 0pt plus 1pt minus 0.1pt  %中文断行
+%\xeCJKsetup{AutoFakeBold=true, AutoFakeSlant=true} 
+\setCJKmainfont[BoldFont={IPAGothic}]{FZLanTingHeiS-EL-GB} %方正字体，也可以改成：微软雅黑
+\setCJKsansfont{FZLanTingHeiS-EL-GB}
+
+%\setCJKmainfont[BoldFont={IPAGothic}]{FZFangSong-Z02}
+%\setCJKsansfont{微软雅黑}
+
+\setCJKfamilyfont{Yahei}{微软雅黑}  
+\newcommand{\Yahei}{\CJKfamily{Yahei}} 
+
+\newcommand{\Lanting}{\CJKfamily{Lanting}}
+
+\usepackage{amsmath, amsthm, amsfonts, amssymb, mathrsfs} %数学公式相关 amssymb用于斜体字符，如varnothing,  masthm用于定理, mathrsfs用于花体字母
+
+\usepackage{caption, algorithm} %排版伪代码算法使用
+\usepackage[]{algpseudocode}
+
+\floatname{algorithm}{\Yahei{算法}}
+\renewcommand{\algorithmicrequire}{\Yahei{输入:}} 
+\renewcommand{\algorithmicensure}{\Yahei{输出:}}
+\renewcommand{\tablename}{表}
+\renewcommand{\figurename}{图}
+\renewcommand\refname{参考文献}
+\renewcommand{\labelenumi}{(\theenumi)}
+
+\usepackage{colortbl, booktabs, multirow, makecell, longtable} %表格处理相关的Package
+\usepackage{tabularx}
+
+\usepackage{tikz, flowchart} % tikz绘图
+\usepackage{pgfplots}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{decorations.markings}
+\usetikzlibrary{calc, arrows,shapes, shapes.geometric, positioning}
+\usetikzlibrary{topaths}
+\usetikzlibrary{mindmap}
+\usetikzlibrary{matrix}
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle,draw,inner sep=0.1pt] (char) {#1};}}
+
+\usepackage{indentfirst}  %首行缩进
+\setlength{\parindent}{2em} 
+\setlength{\listparindent}{2em} %item列表的段落缩进量
+\usepackage{enumitem}
+\setenumerate[1]{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+\setitemize[1]{itemsep=0pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+\linespread{1.25} % Change line spacing here, Palatino benefits from a slight
+                  % increase by default
+
+\usepackage[numbers]{natbib} %cite style 
+\newcommand{\upcite}[1]{\textsuperscript{\textsuperscript{\cite{#1}}}}
+\newcommand{\mycite}[1]{\textsuperscript{\textsuperscript{\cite{#1}}}}
+%\newcommand{\mycite}[1]{(\citeauthor{#1}, \citeyear{#1})}
+
+\renewcommand\arraystretch{1.2} %表格的高度加大
+\setlength{\abovecaptionskip}{-6pt} %缩小表格离标题的空白高度
+%\setlength{\belowcaptionskip}{-5pt}
+\setlength{\textfloatsep}{1mm}  %缩小表格与后面文字的距离
+
+\captionsetup{belowskip=-10pt}%缩小标题后面的空白
+%\captionsetup{aboveskip=0pt}
+
+\renewcommand{\rm}[1]{{\color{blue} \Yahei #1}} %表格的高度加大
+
+\renewcommand{\thefootnote}{\noindent *}
+\pagestyle{empty} %去掉页码
+
+
+\usepackage{titlesec}
+\titleformat{\section}
+            {\normalfont\LARGE}
+            {\thesection}{1em}{}
+
+\titleformat{\subsection}
+            {\normalfont\Large}
+            {\thesubsection}{1em}{}      
+
+\titleformat{\subsubsection}
+            {\normalfont\large}
+            {\thesubsubsection}{1em}{}      
+
+
+
+\usepackage{titletoc} 
+
+\usepackage[pdfstartview=FitH,
+            CJKbookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            colorlinks=true, %注释掉此项则交叉引用为彩色边框(将colorlinks和pdfborder同时注释掉)
+            %pdfborder=001,   %注释掉此项则交叉引用为彩色边框
+            citecolor=magenta,% magenta , cyan
+            linkcolor=blue,
+            linktocpage=true,
+            ]{hyperref}       % hyperref 宏包通常要求放在导言区的最后!!!
+
+
+\usepackage{fancyhdr}    % 控制页眉的左中右，和 页底的左中右。
+\usepackage{lastpage}    % 获取总页数
+
+%\input{lststyle}
+\usepackage{minted} %编译： xelatex -shell-escape iris.tex
+
+
+\begin{document}
+\begin{table}[ht!]
+  \begin{tabular}{l l}
+    \toprule
+    版本~~~~ & 1.0 ~~~~~~~~~~~ \\ 
+    \midrule
+    编写人 & 夏天 \\
+	\midrule
+	修订日期 & \number\year -- \number\month -- \number\day \\
+    \bottomrule    
+  \end{tabular}
+\end{table}
+
+\begin{center}
+  {\Huge \Yahei  Octopus --- Leading Web Cralwer \\    
+    \vspace{5cm}
+    \includegraphics[width=0.6\textwidth]{octopus.png}
+  }
+\vspace{0.5cm}
+\small
+\end{center}
+
+\vspace{1cm}
+
+\normalsize
+\setcounter{footnote}{0}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+
+\setlength{\baselineskip}{20pt} %行间距
+
+\newpage
+\renewcommand{\contentsname}{\hspace*{\fill}目\quad 录\hspace*{\fill}}
+\textsf{\tableofcontents}
+\setcounter{page}{0}
+\thispagestyle{empty}
+\newpage
+
+\setlength{\baselineskip}{20pt} %行间距
+\pagestyle{fancy} %fancyhdr宏包新增的页面风格
+\fancyhf{}
+\lhead{Octopus}
+\rhead{第 \thepage\ / \pageref{LastPage} 页} %当前页/总页数
+
+\input{main}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

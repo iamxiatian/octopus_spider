@@ -55,7 +55,7 @@ object MyConf {
     def isNumeric(maybeNumeric: String): Boolean =
       maybeNumeric != null && maybeNumeric.matches("[0-9]+")
 
-    val map = new ConcurrentHashMap[String, (Long, Long)]()
+    val map = new ConcurrentHashMap[String, (Int, Int)]()
     val f = new java.io.File("./conf/speed-control.txt")
     if (f.exists()) {
       Source.fromFile("./conf/speed-control.txt", "utf-8")
@@ -73,8 +73,8 @@ object MyConf {
             }
 
             map.put(parts(0), (
-              parts(1) toLong,
-              if (parts.length > 2) parts(2).toLong else parts(1).toLong
+              parts(1) toInt,
+              if (parts.length > 2) parts(2).toInt else parts(1).toInt
             ))
         }
     } else {

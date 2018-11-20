@@ -23,7 +23,7 @@ buildInfoOptions += BuildInfoOption.BuildTime
 buildInfoOptions += BuildInfoOption.ToJson
 
 //akka
-val akkaVersion = "2.5.16"
+val akkaVersion = "2.5.17"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % akkaVersion
 libraryDependencies += "com.typesafe.akka" %% "akka-remote" % akkaVersion
@@ -34,8 +34,8 @@ libraryDependencies += "com.typesafe.akka" %% "akka-stream" % akkaVersion
 
 libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.1.5"
 //libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.0"
-libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.5.5"
-
+libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.5.6"
+libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.5.6"
 
 //akka http 跨域访问
 libraryDependencies += "ch.megard" %% "akka-http-cors" % "0.3.0"

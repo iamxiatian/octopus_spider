@@ -1,0 +1,48 @@
+\begin{tikzpicture}[
+  bucket/.style={draw, minimum height=3cm, minimum width=1.5cm, fill=blue!5},
+  machine/.style={draw=blue, fill=red!10, minimum height=3cm, minimum width=1.5cm},
+  fetcher/.style={draw, shape=circle, minimum size=0.8cm, text width=6}
+  ]
+
+  \draw node[draw, thick, color=blue!80, dashed, minimum height=4.6cm, minimum width=15cm, xshift=6cm] (master) {} node[left=-2cm of master, yshift=1.8cm]{\Large $Master$};
+  \draw node[bucket](b1) {桶1} node[bucket, right=of b1](b2) {桶2} node[bucket,right=of b2](b3) {\huge $\cdots$} node[bucket, right=of b3](b4) {桶n-1} node[bucket, right=of b4](bn){桶n};
+
+  \draw node[right=0.5 of bn, align=center] {存放待抓取 \\ URL的桶};
+
+  \draw node[draw, ellipse, below=3cm of b1, fill=red!10, minimum height=1cm, minimum width=4cm] (m1) {Fetcher on Machine 1};
+  \draw node[above=0 of m1, xshift=-3cm](f0) {} 
+	node[fetcher, right=0.1 of f0](f1) {$f_1$}
+	node[fetcher, right=0.1 of f1](f2) {$f_2$}
+	node[fetcher, right=0.1 of f2](f3) {$\cdots$}
+	node[fetcher, right=0.1 of f3](f4) {$f_{n-1}$}
+	node[fetcher, right=0.1 of f4](fn) {$f_n$};
+
+  \path[-latex] (f1.north) edge[bend right] (b1.south)
+  (f2.north) edge[bend right] (b2.south)
+  (f3.north) edge[bend right=15] (b3.south)
+  (f4.north) edge[bend right=15] (b4.south)
+  (fn.north) edge[bend right=15] (bn.south);
+
+  \draw node[draw, ellipse, below=4.5cm of b3, fill=red!10, minimum height=1cm, minimum width=4cm] (m2) {Fetcher on Machine 2};
+  \draw node[above=0 of m2, xshift=-3cm](f0) { } 
+	node[fetcher, right=0.1 of f0](f1) {$f_1$}
+	node[fetcher, right=0.1 of f1](f2) {$f_2$}
+	node[fetcher, right=0.1 of f2](f3) {$\cdots$}
+	node[fetcher, right=0.1 of f3](f4) {$f_{n-1}$}
+	node[fetcher, right=0.1 of f4](fn) {$f_n$};
+
+  \path[-latex] (f1) edge[bend right=45] (b1.south)
+  (f2) edge[bend right] (b2.south)
+  (f3) edge[bend right] (b3.south)
+  (f4) edge[bend right] (b4.south)
+  (fn) edge[bend right] (bn.south);
+
+  \draw node[draw, dotted, ellipse, right=of m2, yshift=-0.5cm, fill=red!10, minimum height=1cm, minimum width=4cm] (m1) {Fetcher on Machine $\cdots$};
+
+  \draw node[above=2.6cm of b3, draw, rounded corners=5](url){http://www.test.com/abc.html}
+  node[below=0.7 of url, draw, rounded corners=5](host){www.test.com};
+
+  \path[draw] (url.north) ++(0, 1cm) edge[->] node[right] {New url is coming...} (url.north)
+  (url.south) edge[->] node[right]{Extract Host} (host.north)
+	(host.south) edge[bend right,dotted, ->] node[]{Choose Bucket and dispatch} (b2.north);
+\end{tikzpicture}

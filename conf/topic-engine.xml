@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 
 <engines>
-    <engine id="1" name="百度新闻">
+    <engine id="1" name="百度新闻" enabled="true">
         <query-pattern encoding="utf-8">
             <![CDATA[http://news.baidu.com/ns?word={}]]>
         </query-pattern>
