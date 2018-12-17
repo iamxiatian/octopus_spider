@@ -79,7 +79,7 @@ libraryDependencies += "com.google.guava" % "guava" % "24.0-jre"
 libraryDependencies += "org.bouncycastle" % "bcpg-jdk15on" % "1.55" force()
 
 //http jars
-libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.5.2"
+libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.5.6"
 libraryDependencies += "org.apache.james" % "apache-mime4j-core" % "0.7.2"
 libraryDependencies += "com.ibm.icu" % "icu4j" % "53.1" //domain process
 libraryDependencies += "org.jsoup" % "jsoup" % "1.11.2"
