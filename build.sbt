@@ -23,7 +23,7 @@ buildInfoOptions += BuildInfoOption.BuildTime
 buildInfoOptions += BuildInfoOption.ToJson
 
 //akka
-val akkaVersion = "2.5.17"
+val akkaVersion = "2.5.19"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % akkaVersion
 libraryDependencies += "com.typesafe.akka" %% "akka-remote" % akkaVersion
@@ -32,7 +32,7 @@ libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 
 libraryDependencies += "com.typesafe.akka" %% "akka-stream" % akkaVersion
 
-libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.1.5"
+libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.1.7"
 //libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.0"
 libraryDependencies += "com.softwaremill.akka-http-session" %% "core" % "0.5.6"
 libraryDependencies += "com.softwaremill.akka-http-session" %% "jwt"  % "0.5.6"
@@ -100,7 +100,7 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser",
   "io.circe" %% "circe-optics"
-).map(_ % "0.9.1")
+).map(_ % "0.10.1")
 
 //Scala Test library
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"

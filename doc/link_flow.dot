@@ -1,0 +1,82 @@
+digraph g {
+  fontname = "微软雅黑";
+  graph [ordering="out"];
+  margin=0;
+
+  node[shape=egg, bgcolor="lightblue", style="filled, dotted"];
+  fileserver[label="电子书全文服务器", shape=egg, bgcolor=red];
+  mysql[label="电子书基础数据(MySQL)",shape=egg];
+
+  node[shape=egg, color="lightblue", style="filled, solid"];
+
+  master[label="总控制器(Master)", color="red", fontcolor="black" style="filled"];
+  
+  graphdb[label="图数据库(JanusGraph)", shape=egg, color="green"];
+  nosqldb[label="NoSQL数据库(RocksDB)", shape=egg, color="green"];
+  rdb[label="关系数据库(PostgreSQL)", shape=egg, color="green"];
+
+  sync[label="数据同步器"];
+  
+  mysql -> sync;
+  sync-> rdb;
+  master -> sync;
+  
+  
+  parse[label="目录结构分析"];
+  topic[label="主题短语抽取"];
+
+  pdf[label="PDF格式分析"];
+  epub[label="Epub格式分析"];
+  parse -> {pdf, epub};
+
+  tokenize[label="分词"];
+  tag[label="词性标记"];
+  ner[label="命名实体识别"];
+  dep[label="句法分析"];
+  topic -> {tokenize, tag, ner, dep};
+    
+  fileserver -> parse;
+  
+  parse -> nosqldb;
+  topic -> nosqldb;
+
+  master -> parse;
+  master -> topic;
+  
+  
+  creategraph[label="创建图谱"];
+  rdb -> creategraph;
+  nosqldb -> creategraph;
+  creategraph -> graphdb;
+  master -> creategraph;
+  
+
+  apiserver[label="外部接口（Restful API）", color="orange", shape=box]
+  # apiserver -> graphdb;
+  master -> apiserver;
+
+  #{rank=same;    wiki;    parse;    topic;    };
+  # {rank=same;    nosqldb;     rdb;    };
+
+  
+  f1[label="分布式爬虫-1", shape=ellipse, color="yellowgreen"];
+  f2[label="爬虫-2", shape=ellipse, color="yellowgreen"];
+  f3[label="爬虫-...", shape=ellipse, color="yellowgreen"];
+
+  amazon[label="亚马逊", color="yellowgreen"];
+  bing[label="必应学术", color="yellowgreen"];
+  sitemore[label="...", color="yellowgreen"];
+  wiki[label="维基百科", color="yellowgreen"];
+
+  f1 -> {amazon, bing, sitemore, wiki};
+  f2 -> {amazon, bing, sitemore, wiki};
+  f3 -> {amazon, bing, sitemore, wiki};
+  master -> {f1, f2, f3};
+
+  {f1} -> nosqldb;
+  
+  {rank=same;    graphdb;   rdb;   f1;    };
+  {rank=min;   apiserver;  }  
+  {rank=same;
+    creategraph, tokenize, tag, ner, dep};
+}
