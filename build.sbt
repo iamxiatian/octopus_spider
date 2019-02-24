@@ -98,8 +98,7 @@ libraryDependencies += "org.apache.opennlp" % "opennlp-tools" % "1.8.4"
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
   "io.circe" %% "circe-generic",
-  "io.circe" %% "circe-parser",
-  "io.circe" %% "circe-optics"
+  "io.circe" %% "circe-parser"
 ).map(_ % "0.10.1")
 
 //Scala Test library

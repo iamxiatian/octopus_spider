@@ -241,4 +241,19 @@ object MyConf {
       println("finished to config logback.")
     }
   }
+
+  /**
+    * 增强Conf第三方类的功能
+    */
+  object ConfImplicits {
+
+    implicit class ExConfig(config: Config) {
+      def getStringOption(path: String): Option[String] = if (config.hasPath(path))
+        Option(config.getString(path)) else None
+
+      def getString(path: String, defaultValue: String): String = if (config.hasPath(path))
+        config.getString(path) else defaultValue
+    }
+
+  }
 }

@@ -1,0 +1,11 @@
+package xiatian.octopus.common
+
+import org.slf4j.LoggerFactory
+
+/**
+  * 统一的日志接口
+  */
+trait Logging {
+  val LOG = LoggerFactory.getLogger(this.getClass)
+
+}
