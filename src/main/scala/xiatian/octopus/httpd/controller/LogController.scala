@@ -12,7 +12,7 @@ import xiatian.octopus.httpd.{HttpServer, JsonSupport}
 import xiatian.octopus.storage.master.{BadLinkDb, FetchLogDb, WaitDb}
 
 /**
-  * 负责URL队列处理的桶的相关路由
+  * 日志相关的控制器
   *
   * @author Tian Xia
   *         School of IRM, Renmin University of China.

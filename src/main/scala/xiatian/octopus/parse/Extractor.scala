@@ -2,7 +2,7 @@ package xiatian.octopus.parse
 
 import org.zhinang.protocol.http.UrlResponse
 import xiatian.octopus.actor.{Context, ProxyIp}
-import xiatian.octopus.model.FetchLink
+import xiatian.octopus.model.{ArticleLinkType, FetchLink}
 
 /**
   * 抽取器的特质
@@ -22,5 +22,14 @@ case object EmptyExtractor extends Extractor {
               proxyHolder: Option[ProxyIp]
              ): Either[Throwable, ExtractResult] =
     Right(ExtractResult(link, List.empty[FetchLink], Map.empty[String, Any]))
+}
 
+object Extractor {
+  def find(link: FetchLink): Option[Extractor] = {
+    link.`type` match {
+      case ArticleLinkType =>
+        Option(ArticleExtractor)
+      case _ => None
+    }
+  }
 }

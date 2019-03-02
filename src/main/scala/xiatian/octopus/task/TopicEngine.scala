@@ -3,7 +3,7 @@ package xiatian.octopus.task
 import java.net.URLEncoder
 
 import org.slf4j.LoggerFactory
-import xiatian.octopus.model.{FetchLink, HubLink}
+import xiatian.octopus.model.{FetchLink, HubLinkType}
 
 /**
   * 主题搜索的引擎，例如百度新闻、知乎、搜索等
@@ -31,7 +31,7 @@ case class TopicEngine(
     val q = URLEncoder.encode(query, encoding)
     val url = queryPattern.replaceAll("\\{\\}", q)
 
-    FetchLink(url, None, None, 1, 0, HubLink, id)
+    FetchLink(url, None, None, 1, 0, HubLinkType, id)
   }
 }
 

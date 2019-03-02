@@ -1,32 +1,17 @@
 package xiatian.octopus.model
 
-import xiatian.octopus.parse.{EmptyExtractor, EmptySaver, Extractor, Saver}
-
 /**
   * 定义了各种链接类型，链接的解析抽取、抽取结果保存都由链接类型确定
   */
 sealed trait LinkType {
-  final val PRIORITY_HIGH = 20
-  final val PRIORITY_NORMAL = 10
-
   def id: Int
 
   def name: String
 
-  def priority = PRIORITY_NORMAL
-
-  /**
-    * 该类型链接对应的抽取器
-    */
-  def extractor: Extractor = EmptyExtractor
-
-  /**
-    * 该类型链接对应抽取结果的保存器, 默认为空保存器，即扔掉抽取的内容
-    */
-  def saver: Saver = EmptySaver
+  def priority = LinkType.PRIORITY_NORMAL
 }
 
-case object UnknownLink extends LinkType {
+case object UnknownLinkType extends LinkType {
   override val id: Int = 0
 
   override val name: String = "UnknownLink"
@@ -35,39 +20,34 @@ case object UnknownLink extends LinkType {
 /**
   * 文章类型的链接
   */
-case object ArticleLink extends LinkType {
+case object ArticleLinkType extends LinkType {
   override val id: Int = 1
 
   override val name: String = "ArticleLink"
-
-  override def extractor: Extractor = EmptyExtractor
-
-  override def saver: Saver = EmptySaver
 }
 
 /**
   * 列表导航类型的连接
   */
-case object HubLink extends LinkType {
+case object HubLinkType extends LinkType {
   override val id: Int = 2
 
   override val name: String = "HubPage"
-
-  override def extractor: Extractor = EmptyExtractor
-
-  override def saver: Saver = EmptySaver
 }
 
 object LinkType {
+  final val PRIORITY_HIGH = 20
+  final val PRIORITY_NORMAL = 10
+
   def apply(id: Int): LinkType = id match {
-    case ArticleLink.id => ArticleLink
-    case HubLink.id => HubLink
-    case _ => UnknownLink
+    case ArticleLinkType.id => ArticleLinkType
+    case HubLinkType.id => HubLinkType
+    case _ => UnknownLinkType
   }
 
   def all: List[LinkType] = List(
-    ArticleLink,
-    HubLink
+    ArticleLinkType,
+    HubLinkType
   )
 }
 

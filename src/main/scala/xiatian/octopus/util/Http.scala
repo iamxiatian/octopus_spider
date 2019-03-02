@@ -11,7 +11,6 @@ import xiatian.octopus.actor.ProxyIp
 import xiatian.octopus.common.MyConf.zhinangConf
 import xiatian.octopus.model.FetchLink
 
-import scala.collection.mutable
 import scala.concurrent.Future
 
 /**
@@ -21,14 +20,7 @@ import scala.concurrent.Future
 object Http {
   val LOG = LoggerFactory.getLogger(this.getClass)
 
-  /**
-    * 主键为代理的地址，Value为HttpClientAgent和加入的时间构成的二元组
-    * 记录时间的目的是: Remo    */
-  val clients = mutable.Map.empty[String, (HttpClientAgent, Long)]
-
   val defaultClient = new HttpClientAgent(zhinangConf)
-
-  def get(url: String): UrlResponse = get(url, "", None, "text/html")
 
   /**
     * 通过代理获取网页信息
@@ -43,42 +35,31 @@ object Http {
       case _ => ("", 0)
     }
 
-    get(url, "", Option(ProxyIp(host, port, System.currentTimeMillis() + 10000)), "text/html")
+    get(url, "",
+      Option(ProxyIp(host, port, System.currentTimeMillis() + 10000)),
+      Option("text/html"))
   }
 
-  def get(url: String,
-          refer: String,
-          proxyHolder: Option[ProxyIp],
-          contentType: String): UrlResponse = {
-    if (clients.size > 100) {
-      val keys = clients.keys
-      keys.foreach {
-        key =>
-          clients.get(key).map {
-            case (client, time) =>
-              //超过1小时，则删除该缓存中的条目
-              if (time + 3600000 < System.currentTimeMillis()) {
-                clients.remove(key)
-              }
-          }
-      }
-    }
+  def get(link: FetchLink,
+          proxyHolder: Option[ProxyIp] = None,
+          contentType: Option[String] = None): UrlResponse =
+    get(link.url, link.refer.getOrElse(""), proxyHolder, contentType)
 
+  def get(url: String,
+          refer: String = "",
+          proxyHolder: Option[ProxyIp] = None,
+          contentType: Option[String] = None): UrlResponse = {
     val client = proxyHolder match {
       case Some(proxyIp) =>
         if (proxyIp.expired()) {
-          //移除缓存中的HttpClientAgent
-          clients.remove(proxyIp.address)
-          //new HttpClientAgent(zhinangConf)
           defaultClient
         } else synchronized {
           LOG.info(s"Use proxy ${proxyIp} to fetch url ${url}")
-          if (clients.contains(proxyIp.address)) clients(proxyIp.address)._1
-          else {
-            val c = new HttpClientAgent(zhinangConf, proxyIp.host, proxyIp.port)
-            clients.put(proxyIp.address, (c, System.currentTimeMillis()))
-            c
-          }
+          new HttpClientAgent(zhinangConf,
+            proxyIp.host,
+            proxyIp.port,
+            HttpClientAgent.PROXY_SOCKS,
+            false)
         }
       case None =>
         //new HttpClientAgent(zhinangConf)
@@ -86,10 +67,12 @@ object Http {
     }
 
     //只有text/html类型的网页才会继续提取内容，填充到response对象中
-    client.execute(
+    val response = client.execute(
       url,
       refer,
-      contentType)
+      contentType.getOrElse(""))
+
+    response
   }
 
   /**
@@ -100,7 +83,7 @@ object Http {
                 refer: String = "",
                 proxyHolder: Option[ProxyIp] = None,
                 contentType: String = "image"): Future[Boolean] = Future.successful {
-    val response = get(url, refer, proxyHolder, contentType)
+    val response = get(url, refer, proxyHolder, Option(contentType))
     if (response.getCode == 200) {
       if (!imgFile.getParentFile.exists()) {
         imgFile.getParentFile.mkdirs()
@@ -151,15 +134,10 @@ object Http {
   def jdoc(link: FetchLink,
            proxyHolder: Option[ProxyIp] = None,
            contentType: String = "text/html"): Document = {
-    val response = get(link, proxyHolder, contentType)
+    val response = get(link, proxyHolder, Option(contentType))
     Jsoup.parse(new ByteArrayInputStream(response.getContent),
       response.getEncoding,
       link.url
     )
   }
-
-  def get(link: FetchLink,
-          proxyHolder: Option[ProxyIp] = None,
-          contentType: String = "text/html"): UrlResponse =
-    get(link.url, link.refer.getOrElse(""), proxyHolder, contentType)
 }

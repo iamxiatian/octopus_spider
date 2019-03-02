@@ -2,7 +2,7 @@ package xiatian.octopus.task
 
 import java.io.{ByteArrayOutputStream, DataOutputStream}
 
-import xiatian.octopus.model.{ArticleLink, FetchLink, HubLink}
+import xiatian.octopus.model.{ArticleLinkType, FetchLink, HubLinkType}
 
 /**
   * 文章站点任务，通过文章报道提供信息的网站
@@ -27,7 +27,7 @@ case class ArticleSiteTask(id: String,
     */
   override def entryLinks: List[FetchLink] = entryUrls.map {
     url =>
-      FetchLink(url, None, None, 1, 0, HubLink, id)
+      FetchLink(url, None, None, 1, 0, HubLinkType, id)
   }
 
   /**
@@ -40,7 +40,7 @@ case class ArticleSiteTask(id: String,
   override def makeChildLinks(link: FetchLink,
                               urlAnchorPairs: Map[String, String]
                              ): List[FetchLink] =
-    if (link.depth > maxDepth || link.`type` == ArticleLink)
+    if (link.depth > maxDepth || link.`type` == ArticleLinkType)
       List.empty
     else {
       urlAnchorPairs.filter {
@@ -53,11 +53,11 @@ case class ArticleSiteTask(id: String,
             //文章链接
             if (anchor.length >= minAnchorLength)
               Option(FetchLink(url, Option(link.url), Option(anchor),
-                link.depth + 1, 0, ArticleLink, link.taskId, link.params))
+                link.depth + 1, 0, ArticleLinkType, link.taskId, link.params))
             else None
           } else if (acceptUrlPatterns.exists(_.r.pattern.matcher(url).matches()) && link.depth < maxDepth) {
             Option(FetchLink(url, Option(link.url), Option(anchor),
-              link.depth + 1, 0, HubLink, link.taskId, link.params))
+              link.depth + 1, 0, HubLinkType, link.taskId, link.params))
           } else None
       }.toList
     }

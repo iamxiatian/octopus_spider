@@ -74,7 +74,7 @@ private[task] trait ArticleHubTask extends FetchTask {
   def secondInterval: Long
 
   /** 该任务下可以处理的链接类型 */
-  override def supportedLinkTypes: Set[LinkType] = Set(ArticleLink, HubLink)
+  override def supportedLinkTypes: Set[LinkType] = Set(ArticleLinkType, HubLinkType)
 
   /**
     * 是否接收该链接，作为本任务的一个抓取链接. 如果可以，返回link，否则返回None
@@ -82,10 +82,10 @@ private[task] trait ArticleHubTask extends FetchTask {
     * @param link
     */
   override def filter(link: FetchLink): Option[FetchLink] = link.`type` match {
-    case ArticleLink =>
+    case ArticleLinkType =>
       if (link.depth > maxDepth + 1) None
       else Some(link)
-    case HubLink =>
+    case HubLinkType =>
       if (link.depth > maxDepth) None else Some(link)
     case _ => None
   }
@@ -97,8 +97,8 @@ private[task] trait ArticleHubTask extends FetchTask {
     * @return
     */
   override def nextFetchSeconds(link: FetchLink): Option[Long] = link.`type` match {
-    case ArticleLink => None //文章链接永不重复抓取
-    case HubLink =>
+    case ArticleLinkType => None //文章链接永不重复抓取
+    case HubLinkType =>
       val seconds = secondInterval * Math.pow(2, link.retries) * Math.pow(2, link.depth - 1)
       Some(seconds.toLong)
   }
