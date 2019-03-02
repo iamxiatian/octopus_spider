@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.model.{FetchLink, LinkType}
+import xiatian.octopus.model.{FetchLink, FetchType}
 import xiatian.octopus.storage.Db
 import xiatian.octopus.storage.ast.QueueMapDb
 import xiatian.octopus.task.FetchTask
@@ -72,7 +72,7 @@ object CrawlDb extends Db {
       false
   }
 
-  private def getCrawlDb(t: LinkType): CrawlDb = {
+  private def getCrawlDb(t: FetchType): CrawlDb = {
     val id = t.id
     if (crawlDbs.contains(id)) {
       crawlDbs.get(id)
@@ -91,7 +91,7 @@ object CrawlDb extends Db {
     }
   }
 
-  def popLink(t: LinkType) = {
+  def popLink(t: FetchType) = {
     val link = getCrawlDb(t).popLink()
     if (link.nonEmpty) getSignatureDb(t).remove(link.get.urlHash)
     link
@@ -112,7 +112,7 @@ object CrawlDb extends Db {
     getSignatureDb(link.`type`).has(link.urlHash, expiredSeconds)
   }
 
-  private def getSignatureDb(t: LinkType): SignatureDb = {
+  private def getSignatureDb(t: FetchType): SignatureDb = {
     val id = t.id
     if (signatureDbs.contains(id)) {
       signatureDbs.get(id)
@@ -134,7 +134,7 @@ object CrawlDb extends Db {
     }
   }
 
-  def queueSize(t: LinkType) = getCrawlDb(t).count()
+  def queueSize(t: FetchType) = getCrawlDb(t).count()
 
   def close(): Unit = {
     println("===Closing CRAWL DB===")

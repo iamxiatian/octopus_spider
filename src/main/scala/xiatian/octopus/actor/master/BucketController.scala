@@ -4,7 +4,7 @@ import java.util.concurrent._
 
 import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.model.{FetchLink, LinkType}
+import xiatian.octopus.model.{FetchLink, FetchType}
 import xiatian.octopus.util.HashUtil
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -237,7 +237,7 @@ object BucketController extends MasterConfig {
       lastFillTime = System.currentTimeMillis()
 
       //尝试注入每一个种类的链接
-      LinkType.all.map {
+      FetchType.all.map {
         linkType =>
           //避免其他的在短时间内再次进入
           val total = totalLinkCount(linkType)
@@ -253,19 +253,19 @@ object BucketController extends MasterConfig {
           (linkType.name, filledCount)
       }
     } else {
-      LinkType.all.map(t => (t.name, 0))
+      FetchType.all.map(t => (t.name, 0))
     }
   }
 
   /**
     * 获取所有桶内的指定类型的链接数量
     */
-  def totalLinkCount(t: LinkType): Int = buckets.map(_.count(t)).sum
+  def totalLinkCount(t: FetchType): Int = buckets.map(_.count(t)).sum
 
   /**
     * 把num个链接向桶里面填充, 返回填充成功的数量
     */
-  private def fillBuckets(t: LinkType, num: Int): Int
+  private def fillBuckets(t: FetchType, num: Int): Int
 
   =
     if (IS_STOPPING) 0

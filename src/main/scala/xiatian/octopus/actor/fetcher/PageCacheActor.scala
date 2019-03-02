@@ -1,9 +1,9 @@
 package xiatian.octopus.actor.fetcher
 
 import akka.actor.{Actor, ActorLogging}
-import xiatian.octopus.model.LinkType
+import xiatian.octopus.model.FetchType
 
-case class CachingPage(url: String, urlType: LinkType, content: Array[Byte], encoding: String)
+case class CachingPage(url: String, urlType: FetchType, content: Array[Byte], encoding: String)
 
 /**
   * 页面缓存Actor

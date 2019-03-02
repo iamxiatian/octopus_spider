@@ -6,7 +6,7 @@ import io.circe.Json
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.model.{FetchLink, LinkType}
+import xiatian.octopus.model.{FetchLink, FetchType}
 import xiatian.octopus.storage.master.{StatsDb, _}
 import xiatian.octopus.task.FetchTask
 
@@ -120,9 +120,9 @@ object UrlManager extends MasterConfig {
   def pushLink(link: FetchLink): Boolean =
     if (CrawlDb.has(link)) false else CrawlDb.pushLink(link)
 
-  def popLink(t: LinkType): Option[FetchLink] = CrawlDb.popLink(t)
+  def popLink(t: FetchType): Option[FetchLink] = CrawlDb.popLink(t)
 
-  def queueSize(t: LinkType) = CrawlDb.queueSize(t)
+  def queueSize(t: FetchType) = CrawlDb.queueSize(t)
 
   def countSuccess(link: FetchLink) = Future.successful {
     countStats(s"p:s:${link.`type`.id}")
@@ -170,13 +170,13 @@ object UrlManager extends MasterConfig {
       case (label, field) =>
         val value: Json = Map[String, Json](
           "success" ->
-            LinkType.all.map { t =>
+            FetchType.all.map { t =>
               val count = StatsDb.get(s"p:s:${field}")
               (t.name, count.asJson)
             }.toMap[String, Json].asJson,
 
           "failure" ->
-            LinkType.all.map { t =>
+            FetchType.all.map { t =>
               val count = StatsDb.get(s"p:f:${field}")
               (t.name, count.asJson)
             }.toMap[String, Json].asJson
@@ -189,13 +189,13 @@ object UrlManager extends MasterConfig {
       case (label, field) =>
         val value: Json = Map[String, Json](
           "success" ->
-            LinkType.all.map { t =>
+            FetchType.all.map { t =>
               val count = StatsDb.get(s"p:s:${field}")
               (t.name, count.asJson)
             }.toMap[String, Json].asJson,
 
           "failure" ->
-            LinkType.all.map { t =>
+            FetchType.all.map { t =>
               val count = StatsDb.get(s"p:f:${field}")
               (t.name, count.asJson)
             }.toMap[String, Json].asJson

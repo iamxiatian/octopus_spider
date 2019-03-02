@@ -2,7 +2,7 @@ package xiatian.octopus.actor.master
 
 import java.util.concurrent.LinkedBlockingDeque
 
-import xiatian.octopus.model.{FetchLink, LinkType}
+import xiatian.octopus.model.{FetchLink, FetchType}
 
 import scala.collection.convert.ImplicitConversions._
 import scala.util.Random
@@ -55,9 +55,9 @@ class Bucket(val idx: Int, val maxSize: Int) {
 
   def putFirst(link: FetchLink): Unit = getQueue(link.`type`).putFirst(link)
 
-  def takeLast(t: LinkType): FetchLink = getQueue(t).takeLast()
+  def takeLast(t: FetchType): FetchLink = getQueue(t).takeLast()
 
-  private def getQueue(t: LinkType): FetchQueue =
+  private def getQueue(t: FetchType): FetchQueue =
     if (queues.containsKey(t.id)) {
       queues.get(t.id)
     } else {
@@ -66,7 +66,7 @@ class Bucket(val idx: Int, val maxSize: Int) {
       q
     }
 
-  def getLinks(t: LinkType): Seq[FetchLink] = getQueue(t).links
+  def getLinks(t: FetchType): Seq[FetchLink] = getQueue(t).links
 
   /**
     * 返回一个链接，策略：
@@ -81,8 +81,8 @@ class Bucket(val idx: Int, val maxSize: Int) {
     else {
 
 
-      val types: List[LinkType] = queues.filter(_._2.nonEmpty).map {
-        case (typeId, _) => LinkType(typeId)
+      val types: List[FetchType] = queues.filter(_._2.nonEmpty).map {
+        case (typeId, _) => FetchType(typeId)
       }.toList
 
       // priority加1避免0溢出
@@ -92,9 +92,9 @@ class Bucket(val idx: Int, val maxSize: Int) {
       val rand = Random.nextInt().abs % (total + 1)
 
       //选择第一个LinkType，该LinkType的重要性和之前的累加值超过了随机数
-      def locate(accumulator: Int, typeList: List[LinkType]): Option[LinkType] =
+      def locate(accumulator: Int, typeList: List[FetchType]): Option[FetchType] =
         typeList match {
-          case Nil => Option.empty[LinkType]
+          case Nil => Option.empty[FetchType]
           case h :: Nil => Some(h)
           case h :: tails =>
             if ((accumulator + h.priority) >= rand)
@@ -106,7 +106,7 @@ class Bucket(val idx: Int, val maxSize: Int) {
       locate(0, types).map(takeFirst)
     }
 
-  def takeFirst(t: LinkType): FetchLink = getQueue(t).takeFirst()
+  def takeFirst(t: FetchType): FetchLink = getQueue(t).takeFirst()
 
   def isEmpty: Boolean = queues.values().forall(_.isEmpty)
 
@@ -116,7 +116,7 @@ class Bucket(val idx: Int, val maxSize: Int) {
 
   def returnLinks: Int = queues.map { case (_, q) => q.pushLinkBack() }.sum
 
-  def count: Int = LinkType.all.map(t => count(t)).sum
+  def count: Int = FetchType.all.map(t => count(t)).sum
 
-  def count(t: LinkType): Int = getQueue(t).size
+  def count(t: FetchType): Int = getQueue(t).size
 }

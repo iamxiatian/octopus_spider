@@ -8,22 +8,22 @@ import xiatian.octopus.util.{HashUtil, HexBytesUtil}
 
 import scala.util.{Failure, Success, Try}
 
+
 /**
-  * 爬虫的URL链接对象, 单独的URL包含的信息太少，所以采用FetchLink进行封装
+  * 一个抓取条目，抓取条目可以是一个url，也可以是一个公众号，或者其他可以单独处理的条目
   *
-  * @param url
+  * @param value   描述抓取条目的值
   * @param depth   采集的深度，默认为0，其子链接的深度为1，以此类推
   * @param retries 连续抓取失败的次数
   * @param `type`  类型
   * @param taskId  : 表明该链接是由哪个栏目抓取得到的，如果为"auto"， 则通过自动抽取进行处理
   */
-case class FetchLink2(url: String,
+case class FetchItem(value: String,
+                     `type`: FetchType,
                      refer: Option[String] = None,
                      anchor: Option[String] = None,
                      depth: Int = 0,
                      retries: Byte = 0, //最大为20,超过100则为20
-                     `type`: FetchType,
-                     //refreshInSeconds: Long = 86400L * 365 * 1000, //更新周期, 以秒为单位, 默认为1000年，即不再更新
                      taskId: String,
                      params: Map[String, String] = Map.empty[String, String]
                     ) extends FastSerializable {
@@ -38,8 +38,8 @@ case class FetchLink2(url: String,
     val out = new ByteArrayOutputStream()
     val dos = new DataOutputStream(out)
 
-    dos.writeByte(FetchLink.VERSION)
-    dos.writeUTF(url)
+    dos.writeByte(FetchItem.VERSION)
+    dos.writeUTF(value)
 
     dos.writeUTF(refer.getOrElse(""))
     dos.writeUTF(anchor.getOrElse(""))
@@ -64,25 +64,24 @@ case class FetchLink2(url: String,
   }
 
   def getHost(): String = Try {
-    new URL(url).getHost
+    new URL(value).getHost
   } match {
     case Success(host) => host
     case Failure(e) =>
       e.printStackTrace()
-      url
+      value
   }
 
   /**
     * 复制对象，并把retries变为新的数值
     */
-  def copy(newRetries: Int): FetchLink2 = FetchLink2(
-    url,
+  def copy(newRetries: Int): FetchItem = FetchItem(
+    value,
+    `type`,
     refer,
     anchor,
     depth,
-    if (newRetries > 20) 20 else newRetries.toByte,
-    `type`,
-    //refreshInSeconds,
+    if (newRetries > 10) 10.toByte else newRetries.toByte,
     taskId,
     params
   )
@@ -93,18 +92,26 @@ case class FetchLink2(url: String,
     *
     * @return
     */
-  def urlHashHex: String = HexBytesUtil.bytes2hex(urlHash)
+  def hashHex: String = HexBytesUtil.bytes2hex(hash)
 
-  def urlHash: Array[Byte] = HashUtil.hashAsBytes(url)
+  def hash: Array[Byte] = HashUtil.hashAsBytes(value)
 }
 
-object FetchLink2 {
+object FetchItem {
   val VERSION = 1
 
-  def readFrom(bytes: Array[Byte]): FetchLink2 = {
+
+  def readFrom(bytes: Array[Byte]): FetchItem = {
     val din = new DataInputStream(new ByteArrayInputStream(bytes))
 
-    val version = din.readByte() //当期那版本
+    val item = readFrom(din)
+    din.close()
+
+    item
+  }
+
+  def readFrom(din: DataInputStream): FetchItem = {
+    val version = din.readByte() //版本
 
     val url = din.readUTF()
 
@@ -127,8 +134,6 @@ object FetchLink2 {
         (din.readUTF(), din.readUTF())
     }.toMap
 
-    din.close
-
-    FetchLink2(url, refer, anchor, depth, retries, `type`, taskId, params)
+    FetchItem(url, `type`, refer, anchor, depth, retries, taskId, params)
   }
 }

@@ -9,7 +9,7 @@ import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import xiatian.octopus.actor.master.BucketController
 import xiatian.octopus.httpd.HttpServer.settings
-import xiatian.octopus.model.LinkType
+import xiatian.octopus.model.FetchType
 import xiatian.octopus.storage.master.WaitDb
 
 import scala.collection.JavaConverters._
@@ -35,7 +35,7 @@ object SpiderRoute extends JsonSupport {
         bucket =>
           bucket.queues.asScala.map {
             case (typeId, q) =>
-              val linkType = LinkType(typeId)
+              val linkType = FetchType(typeId)
               val links: Seq[Json] = bucket.getLinks(linkType).map {
                 link =>
                   Map(
