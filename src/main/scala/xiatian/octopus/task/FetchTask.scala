@@ -1,21 +1,22 @@
 package xiatian.octopus.task
 
-import java.io.{ByteArrayInputStream, DataInputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream}
 
-import xiatian.octopus.actor.Context
 import xiatian.octopus.common.Logging
 import xiatian.octopus.model._
+import xiatian.octopus.parse.Parser
+import xiatian.octopus.storage.master.TaskDb
 import xiatian.octopus.task.core.ArticleHubTask
-import xiatian.octopus.task.epaper.EPaperTask
+import xiatian.octopus.task.epaper.{EPaperTask, 人民日报}
 
 
 /**
   * 抓取任务，各类任务具有的基本行为. 典型的抓取任务如针对某个网站的全站采集，
   * 针对某个关键词的定向采集。
   */
-abstract class FetchTask(id: String,
-                         name: String,
-                         taskType: TaskType
+abstract class FetchTask(val id: String,
+                         val name: String,
+                         val taskType: TaskType
                         ) {
   /**
     * 是否接收该链接，作为本任务的一个抓取链接
@@ -39,7 +40,41 @@ abstract class FetchTask(id: String,
     *
     * @return
     */
-  def toBytes: Array[Byte]
+  def toBytes: Array[Byte] = {
+    val out = new ByteArrayOutputStream()
+    val dos = new DataOutputStream(out)
+
+    //写入头部信息
+    dos.writeInt(taskType.id)
+
+    //写入主体信息
+    writeBody(dos)
+
+    dos.close()
+    out.close()
+
+    out.toByteArray
+  }
+
+  /**
+    * 把任务的描述主题，写入到输出流之中
+    */
+  protected def writeBody(dos: DataOutputStream): Unit = {
+    dos.writeUTF(id)
+    dos.writeUTF(name)
+    dos.writeInt(entryItems.size)
+    entryItems foreach {
+      item =>
+        dos.write(item.toBytes())
+    }
+  }
+
+  /**
+    * 该任务对应的解析器, 利用该解析器可以对抓取条目进行解析，获取其中的内容
+    *
+    * @return
+    */
+  def parser: Option[Parser] = None
 }
 
 object FetchTask extends Logging {
@@ -56,7 +91,7 @@ object FetchTask extends Logging {
         //电子报
         EPaperTask(din)
       case _ =>
-        LOG.error(s"unknown task type $taskType")
+        LOG.error(s"俺不懂该任务类型： $taskType")
         None
     }
 
@@ -64,30 +99,16 @@ object FetchTask extends Logging {
     result
   }
 
-  def context(taskId: String): Option[Context] = Option {
-    //@TODO 修改此处
-    //Context(FetchTask(""))
-    null
-  }
+  def count(): Int = TaskDb.count()
 
-  def count(): Int = 0
-
-  def get(link: FetchItem): Option[FetchTask] = get(link.taskId).orElse {
-    LOG.warn(s"invalid task id ${link.taskId}, url=>${link.url}")
-    None
-  }
+  def get(link: FetchItem): Option[FetchTask] = get(link.taskId)
 
   def get(taskId: String): Option[FetchTask] = {
+    TaskDb.get(taskId).flatMap(readFrom(_))
+  }
 
-    val bytes = 0 //
-
-    None
-    //    taskId match {
-    //      case TaskType
-    //      case _ =>
-    //        LOG.error(s"task $taskId does not exist.")
-    //        None
-    //    }
+  def main(args: Array[String]): Unit = {
+    TaskDb.save(人民日报)
   }
 }
 

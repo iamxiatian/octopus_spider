@@ -1,6 +1,6 @@
 package xiatian.octopus.storage.master
 
-import java.io.{ByteArrayOutputStream, DataOutputStream, File}
+import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 
 import xiatian.octopus.common.MyConf
@@ -16,17 +16,12 @@ object TaskDb extends
 
   def getIds(): Seq[String] = keys.map(new String(_, UTF_8)).toSeq
 
-  def save(task: FetchTask) = {
-    //开始的两个整数分别为：任务类型和版本，方便扩展
-    val out = new ByteArrayOutputStream()
-    val dos = new DataOutputStream(out)
+  def save(task: FetchTask): TaskDb.type = {
+    write(task.id.getBytes(UTF_8), task.toBytes)
+    this
+  }
 
-    dos.writeInt(task.type)
-    writeBytes(dos)
-
-    dos.close()
-    out.close()
-    val value = out.toByteArray
-    put(task.id.getBytes(UTF_8), value)
+  def get(taskId: String): Option[Array[Byte]] = {
+    read(taskId.getBytes(UTF_8))
   }
 }

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import org.zhinang.protocol.http.{HttpClientAgent, UrlResponse}
 import xiatian.octopus.actor.ProxyIp
 import xiatian.octopus.common.MyConf.zhinangConf
-import xiatian.octopus.model.FetchLink
+import xiatian.octopus.model.FetchItem
 
 import scala.concurrent.Future
 
@@ -40,7 +40,7 @@ object Http {
       Option("text/html"))
   }
 
-  def get(link: FetchLink,
+  def get(link: FetchItem,
           proxyHolder: Option[ProxyIp] = None,
           contentType: Option[String] = None): UrlResponse =
     get(link.url, link.refer.getOrElse(""), proxyHolder, contentType)
@@ -131,7 +131,7 @@ object Http {
     * @param contentType
     * @return
     */
-  def jdoc(link: FetchLink,
+  def jdoc(link: FetchItem,
            proxyHolder: Option[ProxyIp] = None,
            contentType: String = "text/html"): Document = {
     val response = get(link, proxyHolder, Option(contentType))

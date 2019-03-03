@@ -1,6 +1,6 @@
 package xiatian.octopus.actor.master
 
-import xiatian.octopus.model.FetchLink
+import xiatian.octopus.model.FetchItem
 
 /**
   * 桶选择器：根据URL的主机地址，选择对应的桶。
@@ -8,17 +8,17 @@ import xiatian.octopus.model.FetchLink
 sealed trait BucketPicker {
   type BucketIdx = Int
 
-  def pick(link: FetchLink) = BucketController.buckets(pickIdx(link))
+  def pick(link: FetchItem) = BucketController.buckets(pickIdx(link))
 
   /**
     * 根据传入的主机地址，选择某个桶，并返回该桶的编号
     */
-  protected def pickIdx(link: FetchLink): BucketIdx
+  protected def pickIdx(link: FetchItem): BucketIdx
 
 }
 
 object SimplePicker extends BucketPicker {
-  def pickIdx(link: FetchLink): BucketIdx = {
+  def pickIdx(link: FetchItem): BucketIdx = {
     link.getHost().hashCode.abs % BucketController.numberOfBuckets
   }
 }
@@ -27,20 +27,20 @@ object SimplePicker extends BucketPicker {
   * 根据时间随机挑选一个桶
   */
 object RandomPicker extends BucketPicker {
-  def pickIdx(link: FetchLink): BucketIdx = {
+  def pickIdx(link: FetchItem): BucketIdx = {
     (System.currentTimeMillis() % BucketController.numberOfBuckets).toInt
   }
 }
 
 object AdvancedPicker extends BucketPicker {
   //TODO
-  def pickIdx(link: FetchLink): BucketIdx = {
+  def pickIdx(link: FetchItem): BucketIdx = {
     link.getHost().hashCode.abs % BucketController.numberOfBuckets
   }
 
   //  val cache = new LruCache[String, BucketIdx](2000)
   //
-  //  def pickIdx(link: FetchLink): BucketIdx = {
+  //  def pickIdx(link: FetchItem): BucketIdx = {
   //    val host = link.getHost()
   //    val defaultIdx = host.hashCode.abs % BucketController.numberOfBuckets
   //    val cachedIdx: Int = if (cache.containsKey(host)) cache.get(host) else -1

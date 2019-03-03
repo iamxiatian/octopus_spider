@@ -6,7 +6,7 @@ import io.circe.Json
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.model.{FetchLink, FetchType}
+import xiatian.octopus.model.{FetchItem, FetchType}
 import xiatian.octopus.storage.master.{StatsDb, _}
 import xiatian.octopus.task.FetchTask
 
@@ -23,12 +23,12 @@ object UrlManager extends MasterConfig {
   val dayFormat = new SimpleDateFormat("yyMMdd")
   val hourFormat = new SimpleDateFormat("yyMMddHH")
 
-  def markFetched(link: FetchLink) = {
+  def markFetched(link: FetchItem) = {
     FetchedSignatureDb.put(link.urlHash)
     removeFetching(link)
   }
 
-  def removeFetching(link: FetchLink) =
+  def removeFetching(link: FetchItem) =
     FetchingSignatureDb.remove(link.urlHash)
 
   /**
@@ -37,13 +37,13 @@ object UrlManager extends MasterConfig {
     *
     * @return
     */
-  def markFetching(link: FetchLink) =
+  def markFetching(link: FetchItem) =
     FetchingSignatureDb.put(link.urlHash)
 
   /**
     * 标记死链接url,避免重复抓取
     */
-  def markDead(link: FetchLink): Unit = {
+  def markDead(link: FetchItem): Unit = {
     removeFetching(link)
     Future.successful {
       BadLinkDb.saveUrl(link.url)
@@ -58,7 +58,7 @@ object UrlManager extends MasterConfig {
     * 如果设置了tryFillBucket，会尝试把数据注入到FetcherController的桶中
     * 首页是0，如果仅抓取首页及其文章，应该把深度设为0.
     */
-  def pushLink(link: FetchLink,
+  def pushLink(link: FetchItem,
                tryFillBucket: Boolean): Boolean =
     if (BucketController.inBucket(link)
       || isFetching(link)
@@ -75,7 +75,7 @@ object UrlManager extends MasterConfig {
   /**
     * url是否已经被抓取过
     */
-  def isFetched(link: FetchLink) = {
+  def isFetched(link: FetchItem) = {
     val expiredSeconds: Long = FetchTask.get(link).map {
       task =>
         task.nextFetchSeconds(link).getOrElse(MyConf.MaxTimeSeconds)
@@ -87,14 +87,14 @@ object UrlManager extends MasterConfig {
   /**
     * 是否在数据页面的待抓取队列中
     */
-  def isFetching(link: FetchLink) =
+  def isFetching(link: FetchItem) =
     FetchingSignatureDb.has(link.urlHash, 120L)
 
   /**
     * Expired time: 5 minutes (300 seconds)
     *
     */
-  def isDead(link: FetchLink) = BadLinkDb.hasUrl(link.url, 300)
+  def isDead(link: FetchItem) = BadLinkDb.hasUrl(link.url, 300)
 
   /**
     * 把原来从队列中出来的链接重新归还回队列, 插入成功，返回Future(1),否则返回Future(0)
@@ -102,7 +102,7 @@ object UrlManager extends MasterConfig {
     * @param link
     * @return
     */
-  def pushLinkBack(link: FetchLink): Boolean =
+  def pushLinkBack(link: FetchItem): Boolean =
     if (link == null) {
       true
     } else if (!CrawlDb.has(link)) {
@@ -117,18 +117,18 @@ object UrlManager extends MasterConfig {
     * @param link
     * @return
     */
-  def pushLink(link: FetchLink): Boolean =
+  def pushLink(link: FetchItem): Boolean =
     if (CrawlDb.has(link)) false else CrawlDb.pushLink(link)
 
-  def popLink(t: FetchType): Option[FetchLink] = CrawlDb.popLink(t)
+  def popLink(t: FetchType): Option[FetchItem] = CrawlDb.popLink(t)
 
   def queueSize(t: FetchType) = CrawlDb.queueSize(t)
 
-  def countSuccess(link: FetchLink) = Future.successful {
+  def countSuccess(link: FetchItem) = Future.successful {
     countStats(s"p:s:${link.`type`.id}")
   }
 
-  def countFailure(link: FetchLink) = Future.successful {
+  def countFailure(link: FetchItem) = Future.successful {
     countStats(s"p:f:${link.`type`.id}")
   }
 

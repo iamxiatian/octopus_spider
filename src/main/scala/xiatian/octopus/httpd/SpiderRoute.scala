@@ -67,7 +67,7 @@ object SpiderRoute extends JsonSupport {
         'field.as[String] ? "",
         'order.as[String] ? "asc") { (page, limit, field, order) =>
         val cnt = WaitDb.count()
-        val data = WaitDb.pageFetchLinks(page, limit).map {
+        val data = WaitDb.pageFetchItems(page, limit).map {
           case (link, fetchTime) =>
             Map(
               "hash" -> link.urlHashHex.asJson,

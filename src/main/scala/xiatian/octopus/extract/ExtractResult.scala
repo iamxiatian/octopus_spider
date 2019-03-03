@@ -1,12 +1,12 @@
-package xiatian.octopus.parse
+package xiatian.octopus.extract
 
 import xiatian.octopus.actor.ProxyIp
-import xiatian.octopus.model.FetchLink
+import xiatian.octopus.model.FetchItem
 
 import scala.concurrent.Future
 
-case class ExtractResult(link: FetchLink, //要抽取的链接
-                         childLinks: List[FetchLink] = List.empty[FetchLink], //抽取出来的子链接
+case class ExtractResult(link: FetchItem, //要抽取的链接
+                         childLinks: List[FetchItem] = List.empty[FetchItem], //抽取出来的子链接
                          datum: Map[String, Any] = Map.empty[String, Any], // 抽取出来的数据
                          proxyHolder: Option[ProxyIp] = None //抓取采用的代理, 当需要进一步采集信息时使用
                         ) {
@@ -35,5 +35,5 @@ case class ExtractResult(link: FetchLink, //要抽取的链接
     *
     * @return
     */
-  def save(): Future[Boolean] = link.`type`.saver.save(this)
+  def save(): Future[Boolean] = ???
 }

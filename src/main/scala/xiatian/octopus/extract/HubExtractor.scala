@@ -1,8 +1,8 @@
-package xiatian.octopus.parse
+package xiatian.octopus.extract
 
 import org.zhinang.protocol.http.UrlResponse
 import xiatian.octopus.actor.{Context, ProxyIp}
-import xiatian.octopus.model.FetchLink
+import xiatian.octopus.model.FetchItem
 import xiatian.octopus.util.HtmlUtil
 
 import scala.util.Try
@@ -15,7 +15,7 @@ import scala.util.Try
   * 注意：Extractor运行在Fetcher客户端，不能直接访问Master端的Task细节信息
   */
 object HubExtractor extends Extractor {
-  override def extract(link: FetchLink,
+  override def extract(link: FetchItem,
                        context: Context,
                        response: UrlResponse,
                        proxyHolder: Option[ProxyIp]
@@ -26,7 +26,7 @@ object HubExtractor extends Extractor {
       response getContent)
 
 
-    val childLinks = context.task.makeChildLinks(link, urlAnchorPairs)
-    ExtractResult(link, childLinks, proxyHolder = proxyHolder)
+    //val childLinks = context.task.makeChildLinks(link, urlAnchorPairs)
+    ExtractResult(link, List.empty, proxyHolder = proxyHolder)
   }.toEither
 }

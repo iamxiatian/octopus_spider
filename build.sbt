@@ -65,7 +65,7 @@ libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.23"
 
 //libraryDependencies += "org.mongodb" % "mongodb-driver" % "3.6.1"
 libraryDependencies += "org.rocksdb" % "rocksdbjni" % "5.7.2"
-libraryDependencies += "org.dizitart" % "nitrite" % "3.1.0"
+// libraryDependencies += "org.dizitart" % "nitrite" % "3.1.0"
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.2"
 

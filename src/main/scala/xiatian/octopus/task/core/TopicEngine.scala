@@ -3,7 +3,7 @@ package xiatian.octopus.task.core
 import java.net.URLEncoder
 
 import org.slf4j.LoggerFactory
-import xiatian.octopus.model.HubFetchType
+import xiatian.octopus.model.{FetchItem, FetchType}
 
 /**
   * 主题搜索的引擎，例如百度新闻、知乎、搜索等
@@ -27,11 +27,11 @@ case class TopicEngine(
     "encoding" -> encoding
   )
 
-  def parseQuery(query: String): FetchLink = {
+  def parseQuery(query: String): FetchItem = {
     val q = URLEncoder.encode(query, encoding)
     val url = queryPattern.replaceAll("\\{\\}", q)
 
-    FetchLink(url, None, None, 1, 0, HubFetchType, id)
+    FetchItem(url, FetchType.HubPage, None, None, 1, 0, id)
   }
 }
 

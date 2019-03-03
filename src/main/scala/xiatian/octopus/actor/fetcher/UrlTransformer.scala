@@ -146,7 +146,7 @@ sealed trait Param extends Logging {
 }
 
 //URL里面的参数，如Google示例中的url参数
-private[rule] case class QueryParam(value: String, encoding: String) extends
+private case class QueryParam(value: String, encoding: String) extends
   Param {
   override def extract(url: String): Option[String] = Try {
     URLDecoder.decode(URL.parse(url).queryParameter(value), encoding)
@@ -159,7 +159,7 @@ private[rule] case class QueryParam(value: String, encoding: String) extends
 }
 
 //通过正则表达式获取url里面的内容
-private[rule] case class RegexParam(value: String, encoding: String) extends Param {
+private case class RegexParam(value: String, encoding: String) extends Param {
   override def extract(url: String): Option[String] = {
     val matcher = value.r.pattern.matcher(url)
     if (matcher.find()) {
@@ -173,7 +173,7 @@ private[rule] case class RegexParam(value: String, encoding: String) extends Par
   }
 }
 
-private[rule] case class EmptyParam(value: String = "", encoding: String = "")
+private case class EmptyParam(value: String = "", encoding: String = "")
   extends Param
 
 /**

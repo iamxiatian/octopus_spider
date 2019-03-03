@@ -4,7 +4,7 @@ import java.util.concurrent._
 
 import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.model.{FetchLink, FetchType}
+import xiatian.octopus.model.{FetchItem, FetchType}
 import xiatian.octopus.util.HashUtil
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -75,7 +75,7 @@ object BucketController extends MasterConfig {
     * @param fetcherId
     * @return
     */
-  def getFetchLink(fetcherHost: String, fetcherId: Int): Option[FetchLink] =
+  def getFetchItem(fetcherHost: String, fetcherId: Int): Option[FetchItem] =
     if (IS_STOPPING)
       None
     else {
@@ -180,7 +180,7 @@ object BucketController extends MasterConfig {
     * @param highPriority 如果为true，则插入到队列的尾部，方便快速出队列
     * @return
     */
-  def fillLink(link: FetchLink, highPriority: Boolean = false): Boolean =
+  def fillLink(link: FetchItem, highPriority: Boolean = false): Boolean =
     if (IS_STOPPING)
       false
     else if (inBucket(link))
@@ -206,10 +206,10 @@ object BucketController extends MasterConfig {
       }
     }
 
-  def markInBucket(link: FetchLink) =
+  def markInBucket(link: FetchItem) =
     urlHashes.put(hashLong(link.url), System.currentTimeMillis())
 
-  def inBucket(link: FetchLink) = {
+  def inBucket(link: FetchItem) = {
     val key = hashLong(link.url)
     if (urlHashes.containsKey(key)) {
       val lastTimeMillis: Long = urlHashes.getOrDefault(key, 0L)
@@ -293,7 +293,7 @@ object BucketController extends MasterConfig {
           }
       }.sum
 
-  def removeFromBucket(link: FetchLink) =
+  def removeFromBucket(link: FetchItem) =
     urlHashes.remove(hashLong(link.url))
 
   /**

@@ -1,4 +1,4 @@
-package xiatian.octopus.parse
+package xiatian.octopus.extract
 
 import scala.concurrent.Future
 

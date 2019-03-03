@@ -92,9 +92,11 @@ case class FetchItem(value: String,
     *
     * @return
     */
-  def hashHex: String = HexBytesUtil.bytes2hex(hash)
+  def urlHashHex: String = HexBytesUtil.bytes2hex(urlHash)
 
-  def hash: Array[Byte] = HashUtil.hashAsBytes(value)
+  def urlHash: Array[Byte] = HashUtil.hashAsBytes(url)
+
+  def url = value
 }
 
 object FetchItem {

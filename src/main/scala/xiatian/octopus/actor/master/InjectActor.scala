@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorSystem}
 import org.joda.time.DateTime
 import xiatian.octopus.actor.ActorMessage.Starting
 import xiatian.octopus.actor.ActorWatching
-import xiatian.octopus.model.FetchLink
+import xiatian.octopus.model.FetchItem
 import xiatian.octopus.storage.master.WaitDb
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -42,7 +42,7 @@ class InjectActor(system: ActorSystem) extends Actor with ActorWatching {
           system.scheduler.scheduleOnce(60 seconds, self, Inject)
       }
 
-    case link: FetchLink =>
+    case link: FetchItem =>
       LOG.info(s"Inject ${link.url}")
       UrlManager.pushLink(link, true)
   }

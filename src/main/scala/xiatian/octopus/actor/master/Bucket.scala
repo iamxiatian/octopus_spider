@@ -2,27 +2,27 @@ package xiatian.octopus.actor.master
 
 import java.util.concurrent.LinkedBlockingDeque
 
-import xiatian.octopus.model.{FetchLink, FetchType}
+import xiatian.octopus.model.{FetchItem, FetchType}
 
 import scala.collection.convert.ImplicitConversions._
 import scala.util.Random
 
 class FetchQueue(name: String) {
-  private val q = new LinkedBlockingDeque[FetchLink]()
+  private val q = new LinkedBlockingDeque[FetchItem]()
 
   def apply(name: String) = new FetchQueue(name)
 
   def clear(): Unit = q.clear()
 
-  def putFirst(link: FetchLink): Unit = q.putFirst(link)
+  def putFirst(link: FetchItem): Unit = q.putFirst(link)
 
-  def putLast(link: FetchLink): Unit = q.putLast(link)
+  def putLast(link: FetchItem): Unit = q.putLast(link)
 
-  def takeFirst(): FetchLink = q.takeFirst()
+  def takeFirst(): FetchItem = q.takeFirst()
 
-  def takeLast(): FetchLink = q.takeLast()
+  def takeLast(): FetchItem = q.takeLast()
 
-  def links: List[FetchLink] = q.toList
+  def links: List[FetchItem] = q.toList
 
   def nonEmpty: Boolean = !isEmpty
 
@@ -51,11 +51,11 @@ class Bucket(val idx: Int, val maxSize: Int) {
     */
   val queues = new ConcurrentHashMap[Int, FetchQueue]()
 
-  def putLast(link: FetchLink): Unit = getQueue(link.`type`).putLast(link)
+  def putLast(link: FetchItem): Unit = getQueue(link.`type`).putLast(link)
 
-  def putFirst(link: FetchLink): Unit = getQueue(link.`type`).putFirst(link)
+  def putFirst(link: FetchItem): Unit = getQueue(link.`type`).putFirst(link)
 
-  def takeLast(t: FetchType): FetchLink = getQueue(t).takeLast()
+  def takeLast(t: FetchType): FetchItem = getQueue(t).takeLast()
 
   private def getQueue(t: FetchType): FetchQueue =
     if (queues.containsKey(t.id)) {
@@ -66,7 +66,7 @@ class Bucket(val idx: Int, val maxSize: Int) {
       q
     }
 
-  def getLinks(t: FetchType): Seq[FetchLink] = getQueue(t).links
+  def getLinks(t: FetchType): Seq[FetchItem] = getQueue(t).links
 
   /**
     * 返回一个链接，策略：
@@ -75,12 +75,10 @@ class Bucket(val idx: Int, val maxSize: Int) {
     *
     * @return
     */
-  def pop(): Option[FetchLink] =
+  def pop(): Option[FetchItem] =
     if (isEmpty)
       None
     else {
-
-
       val types: List[FetchType] = queues.filter(_._2.nonEmpty).map {
         case (typeId, _) => FetchType(typeId)
       }.toList
@@ -106,7 +104,7 @@ class Bucket(val idx: Int, val maxSize: Int) {
       locate(0, types).map(takeFirst)
     }
 
-  def takeFirst(t: FetchType): FetchLink = getQueue(t).takeFirst()
+  def takeFirst(t: FetchType): FetchItem = getQueue(t).takeFirst()
 
   def isEmpty: Boolean = queues.values().forall(_.isEmpty)
 

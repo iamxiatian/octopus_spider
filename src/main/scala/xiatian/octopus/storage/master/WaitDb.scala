@@ -4,7 +4,7 @@ import java.io.File
 
 import org.joda.time.DateTime
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.model.FetchLink
+import xiatian.octopus.model.FetchItem
 import xiatian.octopus.storage.ast.{ScoreUpdate, SortedSetDb}
 import xiatian.octopus.task.FetchTask
 import xiatian.octopus.util.{HashUtil, HexBytesUtil}
@@ -24,7 +24,7 @@ class WaitDb(path: String) extends SortedSetDb("WaitDB", path) {
     *
     * @param link 要压入的链接
     */
-  def push(link: FetchLink): Unit = FetchTask.get(link) map {
+  def push(link: FetchItem): Unit = FetchTask.get(link) map {
     task =>
       task.nextFetchSeconds(link).map {
         interval =>
@@ -40,7 +40,7 @@ class WaitDb(path: String) extends SortedSetDb("WaitDB", path) {
     * @param link
     * @param nextFetchInSeconds
     */
-  def push(link: FetchLink,
+  def push(link: FetchItem,
            nextFetchInSeconds: Long,
            strategy: ScoreUpdate = ScoreUpdate.LT_OLD): Unit = {
     val key = link.urlHash
@@ -57,21 +57,21 @@ class WaitDb(path: String) extends SortedSetDb("WaitDB", path) {
     * @param topN
     * @return
     */
-  def popCrawlLinks(topN: Int): Seq[FetchLink] = {
+  def popCrawlLinks(topN: Int): Seq[FetchItem] = {
     val seconds = System.currentTimeMillis() / 1000
     popTopList(seconds, topN).map {
       case (key, value, score) =>
-        FetchLink.readFrom(value)
+        FetchItem.readFrom(value)
     }
   }
 
   /**
     * 获取指定分页内的链接数据
     */
-  def pageFetchLinks(page: Int, pageSize: Int): Seq[(FetchLink, DateTime)] =
+  def pageFetchItems(page: Int, pageSize: Int): Seq[(FetchItem, DateTime)] =
     pageList(page, pageSize).map {
       case (key, value, score) =>
-        (FetchLink.readFrom(value), new DateTime(score * 1000L))
+        (FetchItem.readFrom(value), new DateTime(score * 1000L))
     }
 
   /**

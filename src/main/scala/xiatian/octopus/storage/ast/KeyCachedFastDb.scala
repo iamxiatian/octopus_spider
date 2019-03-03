@@ -63,7 +63,7 @@ class KeyCachedFastDb(path: String, cacheSize: Int = 2000) extends Db {
   /**
     * 保存到数据库中
     */
-  def put(key: Array[Byte], value: Array[Byte]): KeyCachedFastDb = {
+  def write(key: Array[Byte], value: Array[Byte]): KeyCachedFastDb = {
     db.put(key, value)
 
     keys += key
@@ -72,17 +72,17 @@ class KeyCachedFastDb(path: String, cacheSize: Int = 2000) extends Db {
     this
   }
 
-  def get(key: Array[Byte]): Option[Array[Byte]] = {
+  def read(key: Array[Byte]): Option[Array[Byte]] = {
     val cachedValue = hitCache.get(key)
 
     if (cachedValue == null) {
-      getFromDb(key)
+      readFromDb(key)
     } else {
       Some(cachedValue)
     }
   }
 
-  private def getFromDb(key: Array[Byte]): Option[Array[Byte]] = {
+  private def readFromDb(key: Array[Byte]): Option[Array[Byte]] = {
     val value = db.get(key)
     if (value == null) {
       None

@@ -1,6 +1,6 @@
 package xiatian.octopus.task.core
 
-import java.io.{ByteArrayOutputStream, DataInputStream, DataOutputStream}
+import java.io.{DataInputStream, DataOutputStream}
 
 import xiatian.octopus.model.{FetchItem, FetchType}
 import xiatian.octopus.task.{FetchTask, TaskType}
@@ -47,16 +47,10 @@ class ArticleHubTask(id: String,
     *
     * @return
     */
-  override def toBytes: Array[Byte] = {
-    val out = new ByteArrayOutputStream()
-    val dos = new DataOutputStream(out)
-
-    //TODO
-
-    dos.close()
-    out.close()
-
-    out.toByteArray
+  override def writeBody(dos: DataOutputStream) = {
+    super.writeBody(dos)
+    dos.writeInt(maxDepth)
+    dos.writeLong(secondInterval)
   }
 }
 

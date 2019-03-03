@@ -1,6 +1,6 @@
 package xiatian.octopus.task.epaper
 
-import java.io.DataInputStream
+import java.io.{DataInputStream, DataOutputStream}
 
 import xiatian.octopus.model.FetchItem
 import xiatian.octopus.task.{FetchTask, TaskType}
@@ -15,16 +15,10 @@ abstract class EPaperTask(id: String,
     */
   override def accept(fetchItem: FetchItem): Boolean = true
 
-  def parseColumn(columItem: FetchItem): List[FetchItem]
-
-  def parseArticle(articleItem: FetchItem): Article
-
-  /**
-    * 把任务转换成二进制字节类型, 开始包含了两个整数，用于标记任务的类型和数据版本
-    *
-    * @return
-    */
-  override def toBytes: Array[Byte] = ???
+  override def writeBody(dos: DataOutputStream): Unit = {
+    dos.writeUTF(id)
+    dos.writeUTF(name)
+  }
 }
 
 object EPaperTask {

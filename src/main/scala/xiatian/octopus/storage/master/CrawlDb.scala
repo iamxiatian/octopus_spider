@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
-import xiatian.octopus.model.{FetchLink, FetchType}
+import xiatian.octopus.model.{FetchItem, FetchType}
 import xiatian.octopus.storage.Db
 import xiatian.octopus.storage.ast.QueueMapDb
 import xiatian.octopus.task.FetchTask
@@ -20,20 +20,20 @@ import scala.util.{Failure, Success, Try}
 private class CrawlDb(path: String, capacity: Int = 100000000)
   extends QueueMapDb(path, capacity) {
 
-  def pushLink(fetchLink: FetchLink) =
+  def pushLink(FetchItem: FetchItem) =
     enqueue(
-      fetchLink.url.getBytes(StandardCharsets.UTF_8),
-      fetchLink.toBytes
+      FetchItem.url.getBytes(StandardCharsets.UTF_8),
+      FetchItem.toBytes
     )
 
-  def popLink(): Option[FetchLink] = dequeue().map(FetchLink.readFrom(_))
+  def popLink(): Option[FetchItem] = dequeue().map(FetchItem.readFrom(_))
 
   def contains(url: String) = containsKey(url.getBytes(StandardCharsets.UTF_8))
 
-  def returnLink(fetchLink: FetchLink) =
+  def returnLink(FetchItem: FetchItem) =
     returnQueue(
-      fetchLink.url.getBytes(StandardCharsets.UTF_8),
-      fetchLink.toBytes
+      FetchItem.url.getBytes(StandardCharsets.UTF_8),
+      FetchItem.toBytes
     )
 }
 
@@ -52,7 +52,7 @@ object CrawlDb extends Db {
     println(s"crawl db and signature db will be opened dynamically.")
   }
 
-  def pushLink(link: FetchLink) = Try {
+  def pushLink(link: FetchItem) = Try {
     getCrawlDb(link.`type`).pushLink(link)
     getSignatureDb(link.`type`).put(link.urlHash)
   } match {
@@ -62,7 +62,7 @@ object CrawlDb extends Db {
       false
   }
 
-  def returnLink(link: FetchLink) = Try {
+  def returnLink(link: FetchItem) = Try {
     getCrawlDb(link.`type`).returnLink(link)
     getSignatureDb(link.`type`).put(link.urlHash)
   } match {
@@ -103,7 +103,7 @@ object CrawlDb extends Db {
     * @param link
     * @return
     */
-  def has(link: FetchLink): Boolean = {
+  def has(link: FetchItem): Boolean = {
     val expiredSeconds = FetchTask.get(link).map {
       task =>
         task.nextFetchSeconds(link).getOrElse(MyConf.MaxTimeSeconds)

@@ -1,9 +1,8 @@
 package xiatian.octopus.actor
 
 import org.joda.time.DateTime
-import org.zhinang.protocol.http.UrlResponse
 import xiatian.octopus.FastSerializable
-import xiatian.octopus.model.FetchLink
+import xiatian.octopus.model.FetchItem
 import xiatian.octopus.task.FetchTask
 
 /**
@@ -46,7 +45,7 @@ final case class EmptyFetchJob() extends FetchJob
   */
 final case class Context(task: FetchTask) extends FastSerializable
 
-final case class NormalFetchJob(link: FetchLink,
+final case class NormalFetchJob(link: FetchItem,
                                 context: Context,
                                 proxy: Option[ProxyIp] = None
                                ) extends FetchJob
@@ -55,7 +54,7 @@ final case class NormalFetchJob(link: FetchLink,
   * link和fetcherId是最为基本的信息，后续的参数是为了由服务器传递到爬虫客户端，
   * 而不需要爬虫客户端去直接访问Master端的数据库
   */
-case class Fetch(link: FetchLink,
+case class Fetch(item: FetchItem,
                  fetcherId: Int,
                  context: Context,
                  proxy: Option[ProxyIp] = None) extends FastSerializable
@@ -82,16 +81,16 @@ case class AnchorLink(url: String, anchor: String, params: Map[String, String])
   */
 case class FetchResult(fetcherId: Int,
                        code: Int,
-                       link: FetchLink,
-                       childFetchLinks: List[FetchLink] = List.empty,
+                       link: FetchItem,
+                       childFetchLinks: List[FetchItem] = List.empty,
                        childAnchorLinks: List[AnchorLink] = List.empty,
                        message: Option[String] = None) extends FastSerializable
 
-case class FetchFailure(link: FetchLink,
+case class FetchFailure(link: FetchItem,
                         reason: String,
                         fetcherId: Int) extends FastSerializable
 
-case class FetchContent(link: FetchLink,
+case class FetchContent(link: FetchItem,
                         context: Context,
                         source: String,
                         title: String,
@@ -113,7 +112,7 @@ object FetchCode {
   val Ok = 200
 
   val Not_HTML = 901
-  val UnknownHost = UrlResponse.Code_UnknownHost
+  val UnknownHost = 502
   val Error = 500
   val PARSE_ERROR = 501
 

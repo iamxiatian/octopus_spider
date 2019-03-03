@@ -1,12 +1,12 @@
-package xiatian.octopus.parse
+package xiatian.octopus.extract
 
 import org.zhinang.protocol.http.UrlResponse
 import xiatian.octopus.actor.{Context, ProxyIp}
 import xiatian.octopus.common.OctopusException
-import xiatian.octopus.model.FetchLink
+import xiatian.octopus.model.FetchItem
 
 object ArticleExtractor extends Extractor {
-  override def extract(link: FetchLink,
+  override def extract(link: FetchItem,
                        context: Context,
                        response: UrlResponse,
                        proxyHolder: Option[ProxyIp]): Either[Throwable, ExtractResult] =

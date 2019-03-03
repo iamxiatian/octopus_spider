@@ -76,7 +76,7 @@ class FetchMasterActor extends Actor with ActorLogging {
         UrlManager.countSuccess(link)
 
         //异步统计抓取链接信息
-        Future(countFetchLink(link))
+        Future(countFetchItem(link))
 
         //重新加入到等待抓取数据库
         Future.successful {
@@ -210,7 +210,7 @@ class FetchMasterActor extends Actor with ActorLogging {
     //爬虫的主机地址
     val fetcherHost = sender().path.address.host.getOrElse("127.0.0.1")
 
-    BucketController.getFetchLink(fetcherHost, fetcherId) match {
+    BucketController.getFetchItem(fetcherHost, fetcherId) match {
       case Some(link) =>
         FetchTask.context(link.taskId) match {
           case Some(context) =>

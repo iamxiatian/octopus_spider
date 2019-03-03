@@ -3,9 +3,8 @@ package xiatian.octopus.actor.store
 import akka.actor.Actor
 import com.google.common.hash.Hashing
 import xiatian.octopus.actor.ActorWatching
-import xiatian.octopus.parse.ExtractResult
-
-import scala.util.{Failure, Success, Try}
+import xiatian.octopus.model.FetchItem
+import xiatian.octopus.parse.ParsedData
 
 /**
   * 保存抓取到的文章数据的Actor，该Actor会直接链接配置文件中指定的数据库保存数据。
@@ -24,12 +23,14 @@ class StoreActor extends Actor with ActorWatching {
     .asInt().abs
 
   override def receive: Receive = {
-    case result: ExtractResult =>
-      Try(result.save()) match {
-        case Success(_) =>
-        case Failure(e) =>
-          e.printStackTrace()
-          LOG.error(e, "save error!")
+    case StoreMessage(item, parsedData) =>
+      item.`type` match {
+        //case FetchType.EPaper.Article =>
+        //process
+        case _ =>
+          LOG.error(s"竟不知如何保存该类型的数据~~~ $item")
       }
   }
 }
+
+case class StoreMessage(item: FetchItem, parsedData: ParsedData)

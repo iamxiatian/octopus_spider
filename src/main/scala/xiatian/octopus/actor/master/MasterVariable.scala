@@ -1,6 +1,6 @@
 package xiatian.octopus.actor.master
 
-import xiatian.octopus.model.FetchLink
+import xiatian.octopus.model.FetchItem
 
 import scala.collection.mutable
 
@@ -32,7 +32,7 @@ object MasterVariable {
     *
     * @param link
     */
-  def countFetchLink(link: FetchLink): Unit = {
+  def countFetchItem(link: FetchItem): Unit = {
     val taskId = link.taskId.toString
     if (!taskFetchedStats.contains(taskId)) {
       taskFetchedStats.put(taskId, new mutable.HashMap[Int, Int]())
