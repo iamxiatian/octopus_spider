@@ -5,9 +5,9 @@ import java.io.{ByteArrayInputStream, File}
 import com.google.common.io.Files
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.slf4j.LoggerFactory
 import org.zhinang.protocol.http.{HttpClientAgent, UrlResponse}
 import xiatian.octopus.actor.ProxyIp
+import xiatian.octopus.common.Logging
 import xiatian.octopus.common.MyConf.zhinangConf
 import xiatian.octopus.model.FetchItem
 
@@ -17,8 +17,7 @@ import scala.concurrent.Future
   * 获取网页内容的HTTP封装对象, 需要缓存支持代理的HttpClientAgent，避免每次都实例化一个
   * HttpClientAgent对象，并尝试多次连接代理服务器，导致Connection Refused.
   */
-object Http {
-  val LOG = LoggerFactory.getLogger(this.getClass)
+object Http extends Logging {
 
   val defaultClient = new HttpClientAgent(zhinangConf)
 
@@ -41,8 +40,8 @@ object Http {
   }
 
   def get(link: FetchItem,
-          proxyHolder: Option[ProxyIp] = None,
-          contentType: Option[String] = None): UrlResponse =
+          proxyHolder: Option[ProxyIp],
+          contentType: Option[String]): UrlResponse =
     get(link.url, link.refer.getOrElse(""), proxyHolder, contentType)
 
   def get(url: String,

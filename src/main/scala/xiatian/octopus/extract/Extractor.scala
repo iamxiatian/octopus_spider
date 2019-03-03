@@ -1,9 +1,8 @@
 package xiatian.octopus.extract
 
 import org.zhinang.protocol.http.UrlResponse
-import xiatian.octopus.actor.{Context, ProxyIp}
-import xiatian.octopus.model.{FetchItem, FetchType}
-import xiatian.octopus.task.epaper.EPaperTask
+import xiatian.octopus.actor.ProxyIp
+import xiatian.octopus.model.{Context, FetchItem, FetchType}
 
 /**
   * 抽取器的特质

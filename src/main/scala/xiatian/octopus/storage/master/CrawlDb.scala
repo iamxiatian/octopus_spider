@@ -40,8 +40,6 @@ private class CrawlDb(path: String, capacity: Int = 100000000)
 object CrawlDb extends Db {
   private val crawlPath = new File(MyConf.masterDbPath, "crawl")
 
-  private val LOG = LoggerFactory.getLogger("CrawlDb")
-
   //create crawl path if not exists.
   crawlPath.mkdirs()
 

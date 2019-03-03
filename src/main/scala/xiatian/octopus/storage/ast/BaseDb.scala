@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets.UTF_8
 
 import com.google.common.collect.Lists
 import org.rocksdb.{ColumnFamilyDescriptor, ColumnFamilyHandle, DBOptions, RocksDB}
-import org.slf4j.LoggerFactory
 import xiatian.octopus.storage.Db
 import xiatian.octopus.util.ByteUtil
 
@@ -18,8 +17,6 @@ import scala.util.{Failure, Success, Try}
   * @param dbPath 数据库的存储位置
   */
 abstract class BaseDb(val dbName: String, val dbPath: File) extends Db {
-  protected val LOG = LoggerFactory.getLogger(this.getClass)
-
   protected val options = new DBOptions()
     .setCreateIfMissing(true)
     .setCreateMissingColumnFamilies(true)

@@ -1,9 +1,9 @@
 package xiatian.octopus.extract
 
 import org.zhinang.protocol.http.UrlResponse
-import xiatian.octopus.actor.{Context, ProxyIp}
+import xiatian.octopus.actor.ProxyIp
 import xiatian.octopus.common.OctopusException
-import xiatian.octopus.model.FetchItem
+import xiatian.octopus.model.{Context, FetchItem}
 
 object ArticleExtractor extends Extractor {
   override def extract(link: FetchItem,

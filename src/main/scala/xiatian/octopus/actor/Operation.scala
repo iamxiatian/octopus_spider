@@ -2,8 +2,7 @@ package xiatian.octopus.actor
 
 import org.joda.time.DateTime
 import xiatian.octopus.FastSerializable
-import xiatian.octopus.model.FetchItem
-import xiatian.octopus.task.FetchTask
+import xiatian.octopus.model.{Context, FetchItem}
 
 /**
   * 在各个Actor之间进行通信的对象
@@ -39,11 +38,6 @@ trait FetchJob extends FastSerializable
 final case class InitFetchJob(id: String) extends FetchJob
 
 final case class EmptyFetchJob() extends FetchJob
-
-/**
-  * 爬虫任务的上下文信息，由Master传递到Client
-  */
-final case class Context(task: FetchTask) extends FastSerializable
 
 final case class NormalFetchJob(link: FetchItem,
                                 context: Context,

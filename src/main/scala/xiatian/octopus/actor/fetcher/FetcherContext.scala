@@ -8,7 +8,7 @@ import xiatian.octopus.task.FetchTask
   * 因此，需要把Fetcher需要的上下文信息，通过SyncContextActor同步到Fetcher，保存
   * 在FetcherContext中。
   */
-object FetcherContext {
+object FetcherContext2 {
   private val cacheSize = 2000
   val tasks = new LruCache[String, FetchTask](cacheSize)
 

@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import akka.actor.SupervisorStrategy.{Restart, Resume}
 import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy}
 import akka.remote.{AssociatedEvent, AssociationErrorEvent, AssociationEvent, DisassociatedEvent}
-import xiatian.octopus.actor.{EmptyFetchJob, FetchCode, FetchFailure, FetchRequest, FetchResult, FetchStatsReply, FetchStatsRequest, NormalFetchJob, ProxyIp}
+import xiatian.octopus.actor._
 import xiatian.octopus.common.MyConf
 import xiatian.octopus.storage.master.{FetchLogDb, WaitDb}
 import xiatian.octopus.task.FetchTask
@@ -85,10 +85,7 @@ class FetchMasterActor extends Actor with ActorLogging {
         //把子链接入爬行队列
         childLinks.foreach {
           childLink =>
-            FetchTask.get(childLink) map {
-              task =>
-                task.filter(childLink).map(UrlManager.pushLink)
-            }
+            UrlManager.pushLink(childLink)
         }
       } else {
         //记录错误信息
@@ -153,56 +150,6 @@ class FetchMasterActor extends Actor with ActorLogging {
       }
 
     case FetchStatsRequest() =>
-      //      if (System.currentTimeMillis() - lastReportTime > 5000) {
-      //        //跟上次时间间隔大于5秒才更新统计结果
-      //        lastReportTime = System.currentTimeMillis()
-      //
-      //        println("FetchStatsRequest: Get totalLinkCount...")
-      //        val totalLinkCount = BucketController.totalLinkCount
-      //
-      //        println("FetchStatsRequest: Get eachBucketLinkCount...")
-      //        val pageCountInBucket: Seq[Int] = BucketController.eachBucketLinkCount()
-      //
-      //        val seconds = (System.currentTimeMillis() - startTime) / 1000.0
-      //
-      //        val speedMap = fetchedStats.map {
-      //          case (typeId, count) =>
-      //            val t = LinkType(typeId)
-      //            (t.name, JsString("%1.3f" format (count / seconds)))
-      //        }.toMap[String, JsValue]
-      //
-      //        println("FetchStatsRequest: Get LinkCenter.report()...")
-      //        UrlManager.report()
-      //          .flatMap {
-      //            centerInfo =>
-      //              val taskCount = Task.count()
-      //
-      //              Future.successful(
-      //                Map[String, JsValue](
-      //                  "generateTime" -> JsString(LocalDateTime.now.toString("yyyy-MM-dd HH:mm:ss")),
-      //                  "taskCount" -> JsNumber(taskCount),
-      //                  "bucket" -> JsObject(Map[String, JsValue](
-      //                    "totalPages" -> JsNumber(totalLinkCount),
-      //                    "details" -> JsArray(
-      //                      pageCountInBucket.map(JsNumber(_)).toVector
-      //                    ))), //桶里面的信息
-      //                  "speed" -> JsObject(speedMap), //速度信息
-      //                  "fetchers" -> JsArray(connectedFetchers.toVector.map(new JsString(_))),
-      //                  "urlDb" -> JsObject(centerInfo)
-      //                ).toJson.prettyPrint
-      //              )
-      //          }
-      //      }.onComplete {
-      //        case Success(msg) =>
-      //          lastReportMsg = msg
-      //          lastReportTime = System.currentTimeMillis() //更新最后一次报告生成时间
-      //        case Failure(e) =>
-      //          println("FetchStatsRequest: Failure when get report...")
-      //          e.printStackTrace()
-      //          lastReportMsg = e.toString
-      //      }
-
-      //并不是等待LinkCenter.report()成功后才传递回消息，以提高响应速度
       sender() ! FetchStatsReply("TODO")
   }
 
@@ -212,24 +159,19 @@ class FetchMasterActor extends Actor with ActorLogging {
 
     BucketController.getFetchItem(fetcherHost, fetcherId) match {
       case Some(link) =>
-        FetchTask.context(link.taskId) match {
-          case Some(context) =>
-            //把当前链接标记为正在抓取，且不在桶中
-            UrlManager.markFetching(link)
+        val context = FetchTask.context(link.taskId)
 
-            val proxyHolder: Option[ProxyIp] = ProxyIpPool.take()
-            currentSender ! NormalFetchJob(link, context, proxyHolder)
+        //把当前链接标记为正在抓取，且不在桶中
+        UrlManager.markFetching(link)
 
-            log.info(s"send ${link.url} to fetcher ${fetcherId}")
+        val proxyHolder: Option[ProxyIp] = ProxyIpPool.take()
+        currentSender ! NormalFetchJob(link, context, proxyHolder)
 
-            //把当前链接标记为正在抓取，且不在桶中
-            BucketController.removeFromBucket(link)
+        log.info(s"send ${link.url} to fetcher ${fetcherId}")
 
-          case None =>
-            log.warning(s"Can NOT find board context: " +
-              s"code=> ${link.taskId}, url=> ${link.url}")
-            currentSender ! EmptyFetchJob()
-        }
+        //把当前链接标记为正在抓取，且不在桶中
+        BucketController.removeFromBucket(link)
+
       case None =>
         currentSender ! EmptyFetchJob()
     }

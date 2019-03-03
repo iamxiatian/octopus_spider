@@ -25,8 +25,6 @@ import scala.util.Try
   */
 class SortedSetDb(dbName: String, //数据库的别名，方便调试和日志查看
                   path: String) extends Db {
-  protected val LOG = LoggerFactory.getLogger(this.getClass)
-
   RocksDB.loadLibrary()
 
   private val options = new DBOptions()

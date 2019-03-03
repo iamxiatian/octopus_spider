@@ -101,6 +101,8 @@ object FetchTask extends Logging {
 
   def count(): Int = TaskDb.count()
 
+  def context(taskId: String): Context = Context()
+
   def get(link: FetchItem): Option[FetchTask] = get(link.taskId)
 
   def get(taskId: String): Option[FetchTask] = {
