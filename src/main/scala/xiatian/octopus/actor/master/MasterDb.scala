@@ -11,7 +11,7 @@ object MasterDb {
     CrawlDb,
     FetchedSignatureDb,
     FetchingSignatureDb,
-    XmlTaskDb,
+    TaskDb,
     StatsDb,
     BadLinkDb,
     FetchLogDb,

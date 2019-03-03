@@ -111,6 +111,16 @@ object FetchTask extends Logging {
 
   def main(args: Array[String]): Unit = {
     TaskDb.save(人民日报)
+    TaskDb.getIds().foreach {
+      id =>
+        val task = get(id)
+        println("_____________________")
+        task.map {
+          t =>
+            t.entryItems.foreach(println)
+        }
+    }
+    TaskDb.close()
   }
 }
 

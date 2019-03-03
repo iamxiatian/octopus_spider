@@ -5,12 +5,13 @@ import org.joda.time.DateTime
 import xiatian.octopus.actor.ActorMessage.Starting
 import xiatian.octopus.actor.ActorWatching
 import xiatian.octopus.model.FetchItem
-import xiatian.octopus.storage.master.WaitDb
+import xiatian.octopus.storage.master.{TaskDb, WaitDb}
+import xiatian.octopus.task.FetchTask
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * 负责把全局URL队列插入到爬虫任务桶中，以及把XML采集任务注入到全局爬虫队列中
@@ -27,19 +28,21 @@ class InjectActor(system: ActorSystem) extends Actor with ActorWatching {
     case Starting =>
       self ! FillBucket
       self ! TransformJob
-      self ! Inject
+      self ! InjectTask
 
     case FillBucket => fillBucket()
 
-    case Inject =>
-      LOG.info(s"inject from WaitDb at ${new DateTime().toString("HH:mm:ss")}")
-
-      injectFromWaitDb().onComplete {
-        case Success(_) => system.scheduler.scheduleOnce(30 seconds, self, Inject)
+    case InjectTask =>
+      println(s"inject tasks at ${new DateTime().toString("HH:mm:ss")}")
+      Try {
+        injectTask()
+      } match {
+        case Success(_) =>
+          system.scheduler.scheduleOnce(30 seconds, self, InjectTask)
         case Failure(e) =>
           e.printStackTrace()
           LOG.error(e.getMessage)
-          system.scheduler.scheduleOnce(60 seconds, self, Inject)
+          system.scheduler.scheduleOnce(60 seconds, self, InjectTask)
       }
 
     case link: FetchItem =>
@@ -56,6 +59,20 @@ class InjectActor(system: ActorSystem) extends Actor with ActorWatching {
     WaitDb.popCrawlLinks(1000).foreach {
       link =>
         UrlManager.pushLink(link, true)
+    }
+  }
+
+  def injectTask() = {
+    TaskDb.getIds().foreach {
+      taskId =>
+        val task = FetchTask.get(taskId)
+        if (task.nonEmpty) {
+          val items = task.get.entryItems
+          items.foreach {
+            item =>
+              UrlManager.pushLink(item, true)
+          }
+        }
     }
   }
 
@@ -88,12 +105,13 @@ class InjectActor(system: ActorSystem) extends Actor with ActorWatching {
     }
   }
 
+
   sealed trait InjectAction
 
   case object FillBucket extends InjectAction
 
   case object TransformJob extends InjectAction
 
-  case object Inject extends InjectAction
+  case object InjectTask extends InjectAction
 
 }

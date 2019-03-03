@@ -32,8 +32,8 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
   case object RequestAsk
 
   val tick = context.system.scheduler.schedule(
-    0 millis,
-    15000 millis,
+    0 seconds,
+    15 seconds,
     self,
     RequestAsk)
 
@@ -45,8 +45,8 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
     case op: FetchRequest => master ! op
 
     case RequestAsk =>
-      //如果5分钟内没有接收到过任务，则自动向master发起任务请求
-      if (System.currentTimeMillis() - lastReceivedTaskTime > 300000)
+      //如果1分钟内没有接收到过任务，则自动向master发起任务请求
+      if (System.currentTimeMillis() - lastReceivedTaskTime > 60000)
         master ! NEW_REQUEST
 
     case result: FetchJob =>

@@ -27,7 +27,7 @@ object SpiderSystem {
     */
   object Master {
 
-    implicit lazy val system: ActorSystem = {
+    implicit val system: ActorSystem = {
       MasterDb.open()
 
       if (akkaMasterConfig.isEmpty) {

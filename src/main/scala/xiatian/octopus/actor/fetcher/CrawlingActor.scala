@@ -21,6 +21,7 @@ class CrawlingActor(storeClient: ActorRef) extends Actor with ActorLogging {
 
       try {
         //只有text/html类型的网页才会继续提取内容，填充到response对象中
+        println(s"fetching ${item.value}")
         val response = Http.get(item, proxyHolder, Option("text/html"))
 
         if (response.getCode != 200) {

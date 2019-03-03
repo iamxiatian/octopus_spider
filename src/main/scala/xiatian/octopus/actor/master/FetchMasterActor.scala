@@ -64,7 +64,7 @@ class FetchMasterActor extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case FetchRequest(id) =>
-      log.debug(s"task request $id from fetcher ${sender().path}")
+      log.info(s"task request $id from fetcher ${sender().path}")
 
       sendFetchTask(sender(), id)
 
@@ -165,14 +165,17 @@ class FetchMasterActor extends Actor with ActorLogging {
         UrlManager.markFetching(link)
 
         val proxyHolder: Option[ProxyIp] = ProxyIpPool.take()
-        currentSender ! NormalFetchJob(link, context, proxyHolder)
 
         log.info(s"send ${link.url} to fetcher ${fetcherId}")
 
         //把当前链接标记为正在抓取，且不在桶中
         BucketController.removeFromBucket(link)
 
+        println(":-) ")
+        currentSender ! NormalFetchJob(link, context, proxyHolder)
+
       case None =>
+        println(":( ")
         currentSender ! EmptyFetchJob()
     }
   }

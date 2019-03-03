@@ -1,6 +1,6 @@
 package xiatian.octopus.storage.ast
 
-import org.rocksdb.{Options, RocksDB, RocksIterator}
+import org.rocksdb.{DBOptions, Options, RocksDB, RocksIterator}
 import org.zhinang.util.cache.LruCache
 import xiatian.octopus.storage.Db
 
@@ -19,8 +19,23 @@ import scala.util.Try
   */
 class KeyCachedFastDb(path: String, cacheSize: Int = 2000) extends Db {
   RocksDB.loadLibrary()
+  println(s"OPEN>>>>>>>>>>>>>>>>>>>>>>>")
 
-  val keys: mutable.SortedSet[Array[Byte]] = {
+//  val options = new DBOptions()
+//    .setCreateIfMissing(true)
+//    .setCreateMissingColumnFamilies(true)
+
+  private val options = new Options().setCreateIfMissing(true)
+  private val db = RocksDB.open(options, path)
+
+  println(s"OPEN $path with count $numKeys")
+
+  /**
+    * 数据库中有的数据的缓存
+    */
+  private val hitCache = new LruCache[Array[Byte], Array[Byte]](cacheSize)
+
+  lazy val keys: mutable.SortedSet[Array[Byte]] = {
     implicit val o = new math.Ordering[Array[Byte]] {
       def compare(a: Array[Byte], b: Array[Byte]): Int = {
         if (a eq null) {
@@ -53,12 +68,10 @@ class KeyCachedFastDb(path: String, cacheSize: Int = 2000) extends Db {
     }
     sortedSet
   }
-  private val options = new Options().setCreateIfMissing(true)
-  private val db = RocksDB.open(options, path)
-  /**
-    * 数据库中有的数据的缓存
-    */
-  private val hitCache = new LruCache[Array[Byte], Array[Byte]](cacheSize)
+
+
+  def count() = keys.size
+
 
   /**
     * 保存到数据库中
@@ -100,8 +113,6 @@ class KeyCachedFastDb(path: String, cacheSize: Int = 2000) extends Db {
     */
   def has(key: Array[Byte]): Boolean = keys.contains(key)
 
-  def count() = keys.size
-
   /**
     * 获取元素的主键和对应的值
     *
@@ -117,7 +128,6 @@ class KeyCachedFastDb(path: String, cacheSize: Int = 2000) extends Db {
 
   override def clear: Try[Unit] = Try {
     keys.toSeq.foreach(remove)
-    true
   }
 
   def remove(key: Array[Byte]): KeyCachedFastDb = {
@@ -141,17 +151,3 @@ class KeyCachedFastDb(path: String, cacheSize: Int = 2000) extends Db {
     println("  [BOARD DB CLOSED]\n")
   }
 }
-
-//object CachableListDb {
-//  def main(args: Array[String]): Unit = {
-//
-//    val db = new CachableListDb("/tmp/test/cacheddb")
-//    db.put("xiatian".getBytes(), "beijing".getBytes())
-//    db.put("ruoxi".getBytes(), "beijing2".getBytes())
-//    db.put("ruoyi".getBytes(), "beijing3".getBytes())
-//    db.put("luyu".getBytes(), "beijing4".getBytes())
-//    db.elements(1, 4).foreach {
-//      case (k, v) => println(s"${new String(k)} = ${new String(v)}")
-//    }
-//  }
-//}
