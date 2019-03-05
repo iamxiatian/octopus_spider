@@ -39,21 +39,21 @@ object EPaperArticleDb extends Repo[EPaperArticle] {
 
     def id = column[String]("id", O.PrimaryKey)
 
-    def url = column[String]("url")
+    def url = column[String]("url", O.Length(250))
 
-    def title = column[String]("title")
+    def title = column[String]("title", O.Length(250))
 
-    def author = column[String]("author")
+    def author = column[String]("author", O.Length(250))
 
-    def pubDate = column[String]("pub_date")
+    def pubDate = column[String]("pub_date", O.Length(50))
 
-    def columnName = column[String]("column")
+    def columnName = column[String]("column", O.Length(50))
 
     def rank = column[Int]("rank")
 
-    def text = column[String]("text")
+    def text = column[String]("text", O.SqlType("MEDIUMTEXT"))
 
-    def html = column[String]("html")
+    def html = column[String]("html", O.SqlType("MEDIUMTEXT"))
 
     def * = (id, url, title, author, pubDate, columnName, rank, text, html) <>
       (EPaperArticle.tupled, EPaperArticle.unapply)
@@ -89,8 +89,7 @@ object EPaperArticleDb extends Repo[EPaperArticle] {
         entities += article
       }
   }
-
-
+  
   def main(args: Array[String]): Unit = {
     Await.result(EPaperArticleDb.createSchema, Duration.Inf)
   }
