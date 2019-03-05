@@ -3,7 +3,7 @@ package xiatian.octopus.model
 /**
   * 定义了各种链接类型，链接的解析抽取、抽取结果保存都由链接类型确定
   */
-trait FetchType {
+abstract class FetchType extends Serializable {
   def id: Int
 
   def name: String
@@ -23,12 +23,16 @@ object FetchType {
   def apply(id: Int): FetchType = id match {
     case ArticlePage.id => ArticlePage
     case HubPage.id => HubPage
+    case EPaper.Column.id => EPaper.Column
+    case EPaper.Article.id => EPaper.Article
     case _ => Unknown
   }
 
   def all: List[FetchType] = List(
     ArticlePage,
-    HubPage
+    HubPage,
+    EPaper.Column,
+    EPaper.Article
   )
 
 
@@ -52,6 +56,10 @@ object FetchType {
 
   }
 
+  def main(args: Array[String]): Unit = {
+    val c = EPaper.Column
+    println(c)
+  }
 
 }
 

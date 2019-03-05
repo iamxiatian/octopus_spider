@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorSystem}
 import org.joda.time.DateTime
 import xiatian.octopus.actor.ActorMessage.Starting
 import xiatian.octopus.actor.ActorWatching
+import xiatian.octopus.common.Logging
 import xiatian.octopus.model.FetchItem
 import xiatian.octopus.storage.master.{TaskDb, WaitDb}
 import xiatian.octopus.task.FetchTask
@@ -65,6 +66,7 @@ class InjectActor(system: ActorSystem) extends Actor with ActorWatching {
   def injectTask() = {
     TaskDb.getIds().foreach {
       taskId =>
+        Logging.println(s"inject $taskId")
         val task = FetchTask.get(taskId)
         if (task.nonEmpty) {
           val items = task.get.entryItems

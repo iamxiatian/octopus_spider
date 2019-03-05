@@ -26,7 +26,7 @@ case class FetchItem(value: String,
                      retries: Byte = 0, //最大为20,超过100则为20
                      taskId: String,
                      params: Map[String, String] = Map.empty[String, String]
-                    ) extends FastSerializable {
+                    ) {
 
   def hasParam(key: String): Boolean = params.contains(key)
 

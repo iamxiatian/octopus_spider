@@ -37,12 +37,12 @@ trait FetchJob extends FastSerializable
   */
 final case class InitFetchJob(id: String) extends FetchJob
 
-final case class EmptyFetchJob() extends FetchJob
+final case class EmptyFetchJob()
 
 final case class NormalFetchJob(link: FetchItem,
                                 context: Context,
-                                proxy: Option[ProxyIp] = None
-                               ) extends FetchJob
+                                proxy: Option[ProxyIp]
+                               )
 
 /**
   * link和fetcherId是最为基本的信息，后续的参数是为了由服务器传递到爬虫客户端，

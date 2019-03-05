@@ -9,3 +9,9 @@ trait Logging {
   val LOG = LoggerFactory.getLogger(this.getClass)
 
 }
+
+object Logging {
+  def println(message: String): Unit = {
+    System.out.println(message)
+  }
+}

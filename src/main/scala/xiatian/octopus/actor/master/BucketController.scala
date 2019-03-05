@@ -80,6 +80,8 @@ object BucketController extends MasterConfig {
       None
     else {
       val bucket = getFetcherBucket(fetcherId)
+//      print("@")
+//      println(s"${bucket.toString}")
 
       bucket.pop() match {
         case Some(link) =>

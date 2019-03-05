@@ -23,7 +23,7 @@ buildInfoOptions += BuildInfoOption.BuildTime
 buildInfoOptions += BuildInfoOption.ToJson
 
 //akka
-val akkaVersion = "2.5.19"
+val akkaVersion = "2.5.21"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % akkaVersion
 libraryDependencies += "com.typesafe.akka" %% "akka-remote" % akkaVersion

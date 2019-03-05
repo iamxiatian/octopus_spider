@@ -64,9 +64,8 @@ class FetchMasterActor extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case FetchRequest(id) =>
-      log.info(s"task request $id from fetcher ${sender().path}")
-
-      sendFetchTask(sender(), id)
+      //log.info(s"task request $id from fetcher ${sender().path}")
+      sendFetchTask(sender, id)
 
     case FetchResult(fetcherId, code, link, childLinks, anchorLinks, message) =>
       UrlManager.removeFetching(link)
@@ -155,27 +154,28 @@ class FetchMasterActor extends Actor with ActorLogging {
 
   def sendFetchTask(currentSender: ActorRef, fetcherId: Int) = {
     //爬虫的主机地址
-    val fetcherHost = sender().path.address.host.getOrElse("127.0.0.1")
+    val fetcherHost = currentSender.path.address.host.getOrElse("127.0.0.1")
+    //Logging.println(s"send fetch task to: $fetcherHost")
 
     BucketController.getFetchItem(fetcherHost, fetcherId) match {
       case Some(link) =>
-        val context = FetchTask.context(link.taskId)
+        val c = FetchTask.context(link.taskId)
 
         //把当前链接标记为正在抓取，且不在桶中
         UrlManager.markFetching(link)
 
         val proxyHolder: Option[ProxyIp] = ProxyIpPool.take()
 
-        log.info(s"send ${link.url} to fetcher ${fetcherId}")
+        print("#")
+        currentSender ! NormalFetchJob(link, c, proxyHolder)
+
+//        currentSender ! "HELLO"
+
+        //log.info(s"send ${link.url} to fetcher ${fetcherId}")
 
         //把当前链接标记为正在抓取，且不在桶中
         BucketController.removeFromBucket(link)
-
-        println(":-) ")
-        currentSender ! NormalFetchJob(link, context, proxyHolder)
-
       case None =>
-        println(":( ")
         currentSender ! EmptyFetchJob()
     }
   }

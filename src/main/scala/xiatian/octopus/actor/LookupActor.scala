@@ -10,20 +10,20 @@ import scala.concurrent.duration._
   * @author Tian Xia
   *         Dec 04, 2016 00:06
   */
-class LookupActor(path: String) extends Actor {
+class LookupActor(remotePath: String) extends Actor {
 
   sendIdentifyRequest()
 
   def receive = identifying
 
   def identifying: Actor.Receive = {
-    case ActorIdentity(`path`, Some(actor)) =>
+    case ActorIdentity(`remotePath`, Some(actor)) =>
       context.watch(actor)
       context.become(active(actor))
       afterActive(actor)
 
-    case ActorIdentity(`path`, None) =>
-      println(s"Remote actor not available: $path")
+    case ActorIdentity(`remotePath`, None) =>
+      println(s"Remote actor not available: $remotePath")
 
     case ReceiveTimeout => sendIdentifyRequest()
 
@@ -31,7 +31,7 @@ class LookupActor(path: String) extends Actor {
   }
 
   def sendIdentifyRequest(): Unit = {
-    context.actorSelection(path) ! Identify(path)
+    context.actorSelection(remotePath) ! Identify(remotePath)
     import context.dispatcher
     context.system.scheduler.scheduleOnce(3.seconds, self, ReceiveTimeout)
   }

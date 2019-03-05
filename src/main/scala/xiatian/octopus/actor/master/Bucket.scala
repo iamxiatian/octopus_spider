@@ -117,4 +117,9 @@ class Bucket(val idx: Int, val maxSize: Int) {
   def count: Int = FetchType.all.map(t => count(t)).sum
 
   def count(t: FetchType): Int = getQueue(t).size
+
+  override def toString: String = {
+    val numbers = queues.values().map(_.size).sum
+    s"bucket: idx=$idx, total links=$numbers"
+  }
 }
