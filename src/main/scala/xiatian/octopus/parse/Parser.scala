@@ -1,5 +1,6 @@
 package xiatian.octopus.parse
 
+import org.zhinang.protocol.http.UrlResponse
 import xiatian.octopus.model.FetchItem
 import xiatian.octopus.task.epaper.人民日报
 import xiatian.octopus.task.{FetchTask, TaskType}
@@ -10,7 +11,7 @@ import scala.util.Try
   * Parser负责解析一个抓取条目，获取其中的结果
   */
 trait Parser {
-  def parse(item: FetchItem): Try[ParseResult]
+  def parse(item: FetchItem, response: UrlResponse): Try[ParseResult]
 
 }
 

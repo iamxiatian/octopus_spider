@@ -35,7 +35,7 @@ class CrawlingActor(storeClient: ActorRef) extends Actor with ActorLogging {
 
           FetchTask.get(item) match {
             case Some(task) =>
-              val parseResult = task.parser.get.parse(item).get
+              val parseResult = task.parser.get.parse(item, response).get
               if (parseResult.data.nonEmpty) {
                 storeClient ! StoreMessage(item, parseResult.data.get)
               }

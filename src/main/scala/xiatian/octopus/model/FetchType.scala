@@ -1,7 +1,8 @@
 package xiatian.octopus.model
 
 /**
-  * 定义了各种链接类型，链接的解析抽取、抽取结果保存都由链接类型确定
+  * 定义了各种链接类型，链接的解析抽取、抽取结果保存都由链接类型确定，
+  * 如果采用trait，会导致akka远程通信出现问题
   */
 abstract class FetchType extends Serializable {
   def id: Int

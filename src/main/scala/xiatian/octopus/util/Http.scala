@@ -66,12 +66,12 @@ object Http extends Logging {
     }
 
     //只有text/html类型的网页才会继续提取内容，填充到response对象中
-    val response = client.execute(
-      url,
-      refer,
-      contentType.getOrElse(""))
-
-    response
+    contentType match {
+      case Some(t) =>
+        client.execute(url, refer, t)
+      case None =>
+        client.execute(url, refer)
+    }
   }
 
   /**
@@ -138,5 +138,17 @@ object Http extends Logging {
       response.getEncoding,
       link.url
     )
+  }
+
+  def jdoc(url: String): Document = {
+    val response = get(url)
+    Jsoup.parse(new ByteArrayInputStream(response.getContent),
+      response.getEncoding, url)
+  }
+
+  def jdoc(response: UrlResponse): Document = {
+    Jsoup.parse(new ByteArrayInputStream(response.getContent),
+      response.getEncoding,
+      response.getUrl.toString)
   }
 }
