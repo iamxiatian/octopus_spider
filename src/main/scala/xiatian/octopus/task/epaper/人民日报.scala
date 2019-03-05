@@ -5,7 +5,7 @@ import org.zhinang.protocol.http.UrlResponse
 import xiatian.octopus.common.OctopusException
 import xiatian.octopus.model.{FetchItem, FetchType}
 import xiatian.octopus.parse.{ParseResult, Parser}
-import xiatian.octopus.util.Http
+import xiatian.octopus.util.{HashUtil, Http}
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -114,9 +114,12 @@ object 人民日报 extends EPaperTask("人民日报电子报", "人民日报电
 
         val html = doc.select("div.text_c").html
         val text = doc.select("div.text_c div.c_c p").asScala.map(_.text).mkString("\n")
+        val id = HashUtil.md5(url)
 
         //TODO: 抽取作者
-        val article = EPaperArticle(url, title, "",
+        val article = EPaperArticle(
+          id,
+          url, title, "",
           pubDate, column, rank,
           text, html)
 

@@ -5,7 +5,7 @@ import com.google.common.hash.Hashing
 import xiatian.octopus.actor.ActorWatching
 import xiatian.octopus.model.FetchItem
 import xiatian.octopus.parse.ParsedData
-import xiatian.octopus.task.epaper.EPaperArticle
+import xiatian.octopus.task.epaper.{EPaperArticle, EPaperArticleDb}
 
 /**
   * 保存抓取到的文章数据的Actor，该Actor会直接链接配置文件中指定的数据库保存数据。
@@ -27,7 +27,8 @@ class StoreActor extends Actor with ActorWatching {
     case StoreMessage(item, parsedData) =>
       parsedData match {
         case article: EPaperArticle =>
-          println(s"${article.title}")
+          //println(s"${article.title}")
+          EPaperArticleDb.save(article)
         //process
         case _ =>
           LOG.error(s"竟不知如何保存该类型的数据~~~ $item")

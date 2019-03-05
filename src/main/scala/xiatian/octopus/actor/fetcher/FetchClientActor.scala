@@ -46,13 +46,12 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
 
     case RequestAsk =>
       //如果1分钟内没有接收到过任务，则自动向master发起任务请求
-      //if (System.currentTimeMillis() - lastReceivedTaskTime > 60000)
-      master ! NEW_REQUEST
+      if (System.currentTimeMillis() - lastReceivedTaskTime > 60000)
+        master ! NEW_REQUEST
 
     case NormalFetchJob(link, c, proxy) =>
-      println("^_^") // 取到正常任务的符号：😊
+      print("\uD83D\uDE0A") // 取到正常任务的符号：😊
       lastReceivedTaskTime = System.currentTimeMillis() //更新同步时间
-      println(s"fetch: $link")
 
       emptyCount = 0
       //指定30秒的延迟, 设置较长的时间延迟，保证GC能够及时回收内存
