@@ -56,11 +56,5 @@ object FetchType {
     case object Article extends BaseFetchType(52, "电子报文章")
 
   }
-
-  def main(args: Array[String]): Unit = {
-    val c = EPaper.Column
-    println(c)
-  }
-
 }
 

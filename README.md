@@ -16,6 +16,10 @@ Octopus: A distributed web spider based on AKKA+Scala
 
 
 ## Compile & Run
+### Install Mysql
+```$sql
+CREATE SCHEMA `octopus` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin ;
+```
 
 ### Compile
 

@@ -7,6 +7,9 @@ import xiatian.octopus.model.FetchItem
 import xiatian.octopus.parse.ParsedData
 import xiatian.octopus.task.epaper.{EPaperArticle, EPaperArticleDb}
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 /**
   * 保存抓取到的文章数据的Actor，该Actor会直接链接配置文件中指定的数据库保存数据。
   *
@@ -28,7 +31,8 @@ class StoreActor extends Actor with ActorWatching {
       parsedData match {
         case article: EPaperArticle =>
           //println(s"${article.title}")
-          EPaperArticleDb.save(article)
+          Await.result(EPaperArticleDb.save(article), Duration.Inf)
+          print("*")
         //process
         case _ =>
           LOG.error(s"竟不知如何保存该类型的数据~~~ $item")

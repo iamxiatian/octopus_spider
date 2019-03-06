@@ -2,7 +2,7 @@ package xiatian.octopus.task
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream}
 
-import xiatian.octopus.common.Logging
+import xiatian.octopus.common.{Logging, MyConf}
 import xiatian.octopus.model._
 import xiatian.octopus.parse.Parser
 import xiatian.octopus.storage.master.TaskDb
@@ -31,7 +31,7 @@ abstract class FetchTask(val id: String,
     * @param link
     * @return
     */
-  def nextFetchSeconds(fetchItem: FetchItem): Option[Long] = None
+  def nextFetchSeconds(fetchItem: FetchItem): Option[Long] = Some(MyConf.MaxTimeSeconds)
 
   def entryItems: List[FetchItem] = ??? //该任务对应的入口链接
 

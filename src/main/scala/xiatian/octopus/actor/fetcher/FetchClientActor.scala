@@ -5,6 +5,7 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import xiatian.octopus.actor._
 import xiatian.octopus.actor.store.StoreActor
+import xiatian.octopus.common.Logging
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -69,7 +70,7 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
         .pipeTo(master)
         .onComplete {
           case Success(r) =>
-            log.info(s"Crawled and send back to master: ${link.url}")
+            Logging.println(s"Crawled and send back to master: ${link.url}")
           case Failure(e) =>
             e.printStackTrace()
             log.error(s"Error crawling $link", e)

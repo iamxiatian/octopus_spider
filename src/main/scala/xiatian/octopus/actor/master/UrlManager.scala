@@ -9,6 +9,7 @@ import xiatian.octopus.common.MyConf
 import xiatian.octopus.model.{FetchItem, FetchType}
 import xiatian.octopus.storage.master.{StatsDb, _}
 import xiatian.octopus.task.FetchTask
+import xiatian.octopus.util.HashUtil
 
 import scala.concurrent.Future
 
@@ -64,7 +65,9 @@ object UrlManager extends MasterConfig {
       || isFetching(link)
       || isDead(link)
       || isFetched(link)
+      || CrawlDb.has(link)
     ) {
+      println("skip push link")
       false
     } else if (tryFillBucket && BucketController.fillLink(link)) {
       true //先注入到爬行队列中，如果队列已满，注入失败，则保存到爬行数据库中
@@ -234,5 +237,13 @@ object UrlManager extends MasterConfig {
       val currentDate = new java.util.Date(d - (3600000L * i))
       (df.format(currentDate), hourFormat.format(currentDate))
     }) toList
+  }
+
+  def main(args: Array[String]): Unit = {
+    val url = "http://paper.people.com.cn/rmrb/html/2019-03/05/nw.D110000renmrb_20190305_8-10.htm"
+    FetchedSignatureDb.open()
+    val existed = FetchedSignatureDb.has(HashUtil.hashAsBytes(url), MyConf.MaxTimeSeconds)
+    println(existed)
+    FetchedSignatureDb.close()
   }
 }

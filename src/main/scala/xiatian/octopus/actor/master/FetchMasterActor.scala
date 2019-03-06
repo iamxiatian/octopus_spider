@@ -6,7 +6,7 @@ import akka.actor.SupervisorStrategy.{Restart, Resume}
 import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy}
 import akka.remote.{AssociatedEvent, AssociationErrorEvent, AssociationEvent, DisassociatedEvent}
 import xiatian.octopus.actor._
-import xiatian.octopus.common.MyConf
+import xiatian.octopus.common.{Logging, MyConf}
 import xiatian.octopus.storage.master.{FetchLogDb, WaitDb}
 import xiatian.octopus.task.FetchTask
 
@@ -64,7 +64,7 @@ class FetchMasterActor extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case FetchRequest(id) =>
-      //log.info(s"task request $id from fetcher ${sender().path}")
+      //Logging.println(s"task request $id from fetcher ${sender().path}")
       sendFetchTask(sender, id)
 
     case FetchResult(fetcherId, code, link, childLinks, anchorLinks, message) =>
@@ -106,7 +106,7 @@ class FetchMasterActor extends Actor with ActorLogging {
       val fromHost = address.host.getOrElse("") + ":" + address.port.getOrElse(0)
       FetchLogDb.log(fromHost, link.`type`.name, link.url, code, message.getOrElse(""))
 
-      log.info(s"Fetched ${link.url} with http code, $code")
+      Logging.println(s"Fetched ${link.url} with http code, $code")
       sendFetchTask(sender(), fetcherId)
 
     case FetchFailure(link, reason, fetcherId) =>

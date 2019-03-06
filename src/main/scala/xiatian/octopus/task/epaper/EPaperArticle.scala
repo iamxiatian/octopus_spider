@@ -81,15 +81,16 @@ object EPaperArticleDb extends Repo[EPaperArticle] {
     entities.length.result
   }
 
-  def save(article: EPaperArticle) = exists(article.id) map {
+  def save(article: EPaperArticle) = exists(article.id) flatMap {
     case true =>
       LOG.info(s"${article.url} has existed, skip.")
+      Future.successful(0)
     case false =>
       db run {
         entities += article
       }
   }
-  
+
   def main(args: Array[String]): Unit = {
     Await.result(EPaperArticleDb.createSchema, Duration.Inf)
   }

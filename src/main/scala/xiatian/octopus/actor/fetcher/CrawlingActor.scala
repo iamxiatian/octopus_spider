@@ -3,6 +3,7 @@ package xiatian.octopus.actor.fetcher
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import xiatian.octopus.actor.store.StoreMessage
 import xiatian.octopus.actor.{Fetch, FetchCode, FetchResult}
+import xiatian.octopus.common.Logging
 import xiatian.octopus.task.FetchTask
 import xiatian.octopus.util.Http
 
@@ -17,11 +18,10 @@ class CrawlingActor(storeClient: ActorRef) extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case Fetch(item, fetcherId, context, proxyHolder) =>
-      if (log.isInfoEnabled) log.info(s"crawling $item")
 
       try {
         //只有text/html类型的网页才会继续提取内容，填充到response对象中
-        println(s"fetching ${item.value}")
+        Logging.println(s"fetching ${item}")
         val response = Http.get(item, proxyHolder, Option("text/html"))
 
         if (response.getCode != 200) {

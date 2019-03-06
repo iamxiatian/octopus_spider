@@ -14,7 +14,7 @@ object 人民日报 extends EPaperTask("人民日报电子报", "人民日报电
   override def entryItems: List[FetchItem] = {
     //默认返回最近一月的入口地址, 减去12小时，保证本天的第一次采集时间在12点之后
 
-    (0 to 30).toList.map {
+    (0 to 2).toList.map {
       days =>
         val d = DateTime.now().minusHours(12).minusDays(days)
 
@@ -100,26 +100,35 @@ object 人民日报 extends EPaperTask("人民日报电子报", "人民日报电
       case FetchType.EPaper.Article =>
         val column = item.params("column")
         val rank = item.params("rank").toInt
-        val pubDate = "/[\\d]{4}\\-[\\d]{2}/[\\d]{2}".r.findFirstIn(url)
+        val pubDate = "[\\d]{4}\\-[\\d]{2}/[\\d]{2}".r.findFirstIn(url)
           .map(_.replace("/", "-"))
           .getOrElse("")
 
         //val title =
         val title = doc.select("div.text_c").asScala
           .flatMap(_.children().asScala) //去除所有子节点
-          .filter(_.nodeName().startsWith("h")) //保留所有的h开始的标记
+          .filter {
+          n =>
+            val name = n.nodeName
+            name == "h1" || name == "h2" //保留所有的h1, h2标记
+        }
           .map(_.text().trim)
           .filter(_.nonEmpty)
+          .mkString(" ")
+
+        val author = doc.select("div.text_c").asScala
+          .flatMap(_.children().asScala) //去除所有子节点
+          .filter(_.nodeName() == "h4")
+          .map(_.text.trim.replaceAll(" ", ""))
           .mkString(" ")
 
         val html = doc.select("div.text_c").html
         val text = doc.select("div.text_c div.c_c p").asScala.map(_.text).mkString("\n")
         val id = HashUtil.md5(url)
 
-        //TODO: 抽取作者
         val article = EPaperArticle(
           id,
-          url, title, "",
+          url, title, author,
           pubDate, column, rank,
           text, html)
 

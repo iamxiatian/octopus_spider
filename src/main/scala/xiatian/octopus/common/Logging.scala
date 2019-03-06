@@ -12,6 +12,6 @@ trait Logging {
 
 object Logging {
   def println(message: String): Unit = {
-    System.out.println(message)
+    //System.out.println(message)
   }
 }
