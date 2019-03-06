@@ -5,7 +5,7 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import xiatian.octopus.actor._
 import xiatian.octopus.actor.store.StoreActor
-import xiatian.octopus.common.Logging
+import xiatian.octopus.common.{Logging, Symbols}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -51,7 +51,7 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
         master ! NEW_REQUEST
 
     case NormalFetchJob(link, c, proxy) =>
-      print("\uD83D\uDE0A") // 取到正常任务的符号：😊
+      print(Symbols.NORMAL_FETCH_JOB) // 取到正常任务的符号：😊
       lastReceivedTaskTime = System.currentTimeMillis() //更新同步时间
 
       emptyCount = 0
@@ -77,7 +77,7 @@ class FetchClientActor(remotePath: String, fetcherId: Int)
         }
 
     case EmptyFetchJob() =>
-      print(".")
+      print(Symbols.EMPTY_JOB)
       lastReceivedTaskTime = System.currentTimeMillis() //更新同步时间
       emptyCount += 1
       val millis = 2000 + (emptyCount * 1000)

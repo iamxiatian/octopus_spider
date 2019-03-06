@@ -3,7 +3,7 @@ package xiatian.octopus.actor.master
 import java.util.concurrent._
 
 import org.slf4j.LoggerFactory
-import xiatian.octopus.common.MyConf
+import xiatian.octopus.common.{MyConf, Symbols}
 import xiatian.octopus.model.{FetchItem, FetchType}
 import xiatian.octopus.util.HashUtil
 
@@ -80,8 +80,8 @@ object BucketController extends MasterConfig {
       None
     else {
       val bucket = getFetcherBucket(fetcherId)
-//      print("@")
-//      println(s"${bucket.toString}")
+      //      print("@")
+      //      println(s"${bucket.toString}")
 
       bucket.pop() match {
         case Some(link) =>
@@ -113,7 +113,7 @@ object BucketController extends MasterConfig {
             } else {
               //未到时间，不抓取该任务，该任务重新加入队列
               bucket.putLast(link)
-              print("⏰") //限速符号⏰
+              print(Symbols.SPEED_LIMIT) //限速符号⏰
               None
             }
           } else {
@@ -139,7 +139,7 @@ object BucketController extends MasterConfig {
             }
           }
         case None =>
-          print("\uD83C\uDE33") //空任务符号： 🈳
+          print(Symbols.BUCKET_EMPTY) //空任务符号： 🈳
           None
       }
     }

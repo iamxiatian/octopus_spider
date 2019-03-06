@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import io.circe.Json
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
-import xiatian.octopus.common.MyConf
+import xiatian.octopus.common.{MyConf, Symbols}
 import xiatian.octopus.model.{FetchItem, FetchType}
 import xiatian.octopus.storage.master.{StatsDb, _}
 import xiatian.octopus.task.FetchTask
@@ -67,7 +67,7 @@ object UrlManager extends MasterConfig {
       || isFetched(link)
       || CrawlDb.has(link)
     ) {
-      println("skip push link")
+      print(Symbols.SKIP_EXISTED_ITEM)
       false
     } else if (tryFillBucket && BucketController.fillLink(link)) {
       true //先注入到爬行队列中，如果队列已满，注入失败，则保存到爬行数据库中

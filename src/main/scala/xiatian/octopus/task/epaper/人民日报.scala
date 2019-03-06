@@ -10,7 +10,7 @@ import xiatian.octopus.util.{HashUtil, Http}
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-object 人民日报 extends EPaperTask("人民日报电子报", "人民日报电子报") with Parser {
+object 人民日报 extends EPaperTask("人民日报电子报", "人民日报") with Parser {
   override def entryItems: List[FetchItem] = {
     //默认返回最近一月的入口地址, 减去12小时，保证本天的第一次采集时间在12点之后
 

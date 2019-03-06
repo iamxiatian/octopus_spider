@@ -168,7 +168,7 @@ class FetchMasterActor extends Actor with ActorLogging {
 
         val proxyHolder: Option[ProxyIp] = ProxyIpPool.take()
 
-        print("#")
+        //print("#")
         currentSender ! NormalFetchJob(link, c, proxyHolder)
 
 //        currentSender ! "HELLO"

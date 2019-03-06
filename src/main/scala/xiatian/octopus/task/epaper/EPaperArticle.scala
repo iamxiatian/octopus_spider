@@ -94,7 +94,4 @@ object EPaperArticleDb extends Repo[EPaperArticle] {
       }
   }
 
-  def main(args: Array[String]): Unit = {
-    Await.result(EPaperArticleDb.createSchema, Duration.Inf)
-  }
 }
