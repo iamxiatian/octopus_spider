@@ -282,7 +282,7 @@ object BucketController extends MasterConfig {
           if (!inBucket(link)) {
             if (currentSize > maxBucketSize) {
               //重新加到队列的末尾，延迟被再次抓取的时间
-              UrlManager.pushLink(link)
+              UrlManager.pushToCrawlDb(link)
               0
             } else {
               markInBucket(link)

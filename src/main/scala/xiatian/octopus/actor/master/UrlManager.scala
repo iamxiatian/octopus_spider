@@ -120,7 +120,7 @@ object UrlManager extends MasterConfig {
     * @param link
     * @return
     */
-  def pushLink(link: FetchItem): Boolean =
+  def pushToCrawlDb(link: FetchItem): Boolean =
     if (CrawlDb.has(link)) false else CrawlDb.pushLink(link)
 
   def popLink(t: FetchType): Option[FetchItem] = CrawlDb.popLink(t)

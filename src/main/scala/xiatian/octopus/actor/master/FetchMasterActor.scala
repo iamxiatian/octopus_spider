@@ -68,10 +68,10 @@ class FetchMasterActor extends Actor with ActorLogging {
       sendFetchTask(sender, id)
 
     case FetchResult(fetcherId, code, link, childLinks, anchorLinks, message) =>
-      UrlManager.removeFetching(link)
-
       if (FetchCode.isOk(code)) {
         UrlManager.markFetched(link)
+        UrlManager.removeFetching(link)
+
         UrlManager.countSuccess(link)
 
         //异步统计抓取链接信息
@@ -84,12 +84,14 @@ class FetchMasterActor extends Actor with ActorLogging {
         //把子链接入爬行队列
         childLinks.foreach {
           childLink =>
-            UrlManager.pushLink(childLink)
+            UrlManager.pushLink(childLink, true)
         }
       } else {
         //记录错误信息
         log.error(s"Fetch ${link.url} is not success, code: ${code}")
         UrlManager.markDead(link)
+        UrlManager.removeFetching(link)
+
         UrlManager.countFailure(link)
 
         //重新加入到等待抓取数据库
