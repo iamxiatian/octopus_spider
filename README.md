@@ -12,6 +12,7 @@ Octopus: A distributed web spider based on AKKA+Scala
 7. 能够集成常规的正文自动抽取（正文抽取算法尚未开源）、关键词抽取、摘要等功能
 8. 能够处理Javascript动态生成的链接
 9. 能够实现网页截屏功能，把网页保存成图片和PDF格式，方便长期保存（如历史档案馆、网页归档）
+10. 能够支持图片的采集和处理
 
 
 
@@ -31,15 +32,16 @@ sbt stage
 ### Run
 ```bash
 cd target/universal/stage
+bin/repo --create # 创建数据库表，否则采集结果无法入库，（TODO）
+bin/task --inject # (TODO)
 bin/spider --master --fetcher
 ```
 
 ## 核心对象
 
-FetchLink: 表示一个被抓取的条目，一个FetchLink除了url、refer等基本信息之外，还包含
-两个重要信息，即所属类型和所属任务，所属类型确定了链接采集后的处理方法，例如，是文章链接，
-还是导航链接；而所属的任务则描述了采集任务的一些参数规定，例如，针对某新闻站点的采集
-任务，要求每隔10分钟扫描一次首页，二级页面1天搜索一次等要求。
+FetchItem: 表示一个被抓取的条目，一个FetchItem除了value等基本信息之外，还包含
+两个重要信息，即所属抓取类型和所属任务，所属类型确定了链接采集后的处理方法，例如，是文章链接，
+还是导航链接，还是电子报的栏目或者文章；而所属的任务则描述了采集任务的一些参数规定，例如，针对某新闻站点的采集任务，要求每隔10分钟扫描一次首页，二级页面1天搜索一次等要求。
 
 ## 目标
 
@@ -50,6 +52,9 @@ FetchLink: 表示一个被抓取的条目，一个FetchLink除了url、refer等�
 
 ## 更改历史
 
+- 可以编译运行并高效抓取电子报，版本升级到2.0
+- 完成了电子报采集逻辑的处理，并成功加入了一个示例
+- 引入slick处理关系性数据库，采集结果目前暂时存入MySQL，方便观察调试
 - MyConf中增加了可以增强Config功能的类
 - 增强url transformer的功能，可以根据正则表达式，对源码中获取的链接进行变换，发现搜索引擎列表页面链接中的真实目标地址
 - 加入统一的日志特质Logging，方便统一管理日志
@@ -62,6 +67,7 @@ FetchLink: 表示一个被抓取的条目，一个FetchLink除了url、refer等�
 
 1. https://akka.io/
 2. https://circe.github.io/circe/
-3. http://irm.ruc.edu.cn/
+3. http://slick.lightbend.com/
+4. http://irm.ruc.edu.cn/
 
 ...
