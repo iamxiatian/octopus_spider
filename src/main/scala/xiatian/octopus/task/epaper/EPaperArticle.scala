@@ -23,7 +23,8 @@ case class EPaperArticle(id: String,
                          title: String,
                          author: String,
                          pubDate: String, //yyyy-MM-dd格式的日期
-                         column: String, //所在栏目
+                         media: String, //电子报来源, 如人民日报
+                         page: String, //所在栏目
                          rank: Int, //在该栏目的排序序号
                          text: String,
                          html: String
@@ -47,7 +48,9 @@ object EPaperArticleDb extends Repo[EPaperArticle] {
 
     def pubDate = column[String]("pub_date", O.Length(50))
 
-    def columnName = column[String]("column", O.Length(50))
+    def media = column[String]("media", O.Length(50))
+
+    def page = column[String]("page", O.Length(50))
 
     def rank = column[Int]("rank")
 
@@ -55,7 +58,7 @@ object EPaperArticleDb extends Repo[EPaperArticle] {
 
     def html = column[String]("html", O.SqlType("MEDIUMTEXT"))
 
-    def * = (id, url, title, author, pubDate, columnName, rank, text, html) <>
+    def * = (id, url, title, author, pubDate, media, page, rank, text, html) <>
       (EPaperArticle.tupled, EPaperArticle.unapply)
   }
 

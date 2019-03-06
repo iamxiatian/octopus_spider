@@ -14,7 +14,7 @@ object 人民日报 extends EPaperTask("人民日报电子报", "人民日报电
   override def entryItems: List[FetchItem] = {
     //默认返回最近一月的入口地址, 减去12小时，保证本天的第一次采集时间在12点之后
 
-    (0 to 2).toList.map {
+    (0 to 30).toList.map {
       days =>
         val d = DateTime.now().minusHours(12).minusDays(days)
 
@@ -129,7 +129,10 @@ object 人民日报 extends EPaperTask("人民日报电子报", "人民日报电
         val article = EPaperArticle(
           id,
           url, title, author,
-          pubDate, column, rank,
+          pubDate,
+          "人民日报",
+          column,
+          rank,
           text, html)
 
         ParseResult(List.empty, Some(article))
