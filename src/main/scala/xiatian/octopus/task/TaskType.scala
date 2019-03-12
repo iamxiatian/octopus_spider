@@ -22,4 +22,13 @@ object TaskType {
     case EPaper.id => EPaper
     case _ => Unknown
   }
+
+  def main(args: Array[String]): Unit = {
+
+    val x  = 400000000
+    val  y = x * 30
+
+    print(y)
+
+  }
 }

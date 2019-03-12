@@ -7,7 +7,7 @@ import xiatian.octopus.model._
 import xiatian.octopus.parse.Parser
 import xiatian.octopus.storage.master.TaskDb
 import xiatian.octopus.task.core.ArticleHubTask
-import xiatian.octopus.task.epaper.{EPaperTask, 人民日报}
+import xiatian.octopus.task.epaper.{EPaperTask, 人民日报, 光明日报}
 
 
 /**
@@ -111,6 +111,8 @@ object FetchTask extends Logging {
 
   def main(args: Array[String]): Unit = {
     TaskDb.save(人民日报)
+    TaskDb.save(光明日报)
+
     TaskDb.getIds().foreach {
       id =>
         val task = get(id)
