@@ -27,6 +27,7 @@ object EPaperTask {
     id match {
       case 人民日报.id => Some(人民日报)
       case 光明日报.id => Some(光明日报)
+      case 新华每日电讯.id => Some(新华每日电讯)
       case _ => None
     }
 

@@ -1,6 +1,7 @@
 package xiatian.octopus.task.epaper
 
 import org.joda.time.DateTime
+import org.jsoup.nodes.{Element, TextNode}
 import org.zhinang.protocol.http.UrlResponse
 import xiatian.octopus.common.OctopusException
 import xiatian.octopus.model.{FetchItem, FetchType}
@@ -10,7 +11,10 @@ import xiatian.octopus.util.{HashUtil, Http}
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-object 光明日报 extends EPaperTask("光明日报电子报", "光明日报") with Parser {
+/**
+  * 新华每日电讯: http://mrdx.cn/content/20190208/Page01HO.htm
+  */
+object 新华每日电讯 extends EPaperTask("新华每日电讯电子报", "新华每日电讯") with Parser {
   override def entryItems: List[FetchItem] = {
     //默认返回最近一月的入口地址, 减去12小时，保证本天的第一次采集时间在12点之后
 
@@ -18,13 +22,12 @@ object 光明日报 extends EPaperTask("光明日报电子报", "光明日报") 
       days =>
         val d = DateTime.now().minusHours(12).minusDays(days)
 
-        //http://epaper.gmw.cn/gmrb/html/2019-03/12/nbs.D110000gmrb_01.htm
-        val pattern = d.toString("yyyy-MM/dd")
-        val url = s"http://epaper.gmw.cn/gmrb/html/$pattern/" +
-          s"nbs.D110000gmrb_01.htm"
+        //http://mrdx.cn/content/20190208/Page01HO.htm
+        val pattern = d.toString("yyyyMMdd")
+        val url = s"http://mrdx.cn/content/$pattern/Page01HO.htm"
 
         FetchItem(url, FetchType.EPaper.Column,
-          Option("http://epaper.gmw.cn/"),
+          Option("http://www.xinhuanet.com/mrdx/"),
           None,
           1,
           0,
@@ -45,17 +48,13 @@ object 光明日报 extends EPaperTask("光明日报电子报", "光明日报") 
     val doc = Http.jdoc(response)
 
     def extractArticleUrls(column: String): List[FetchItem] = {
-      val articleUrls = doc.select("div#titleList a").asScala
-      articleUrls.zipWithIndex.map {
+      val urls = doc.select("td a.atitle").asScala.filter {
+        u => u.attr("href").contains("Artice")
+      }
+      urls.zipWithIndex.map {
         case (a, idx) =>
           val link = a.attr("abs:href")
-          val text = a.select("script").html
-          val first = text.indexOf("\"")
-          val last = text.lastIndexOf("\"")
-
-          val anchor = if (first > 0 && last > first)
-            text.substring(first + 1, last).trim
-          else text
+          val anchor = a.text().trim
 
           FetchItem(link, FetchType.EPaper.Article,
             Option(url), Option(anchor),
@@ -68,12 +67,13 @@ object 光明日报 extends EPaperTask("光明日报电子报", "光明日报") 
     }
 
     def extractColumnUrls(): List[FetchItem] = {
-      val columnUrls = doc.select("div#pageList a")
-        .asScala.filter(_.attr("href").contains(".htm"))
+      val columnUrls = doc.select("td a.atitle").asScala.filter {
+        u => u.attr("href").contains("Page") && u.text().length > 2
+      }
       columnUrls.map {
         a =>
           val link = a.attr("abs:href")
-          val columnName = a.text.trim
+          val columnName = a.text.trim.replaceAll(" ", "")
 
           FetchItem(link, FetchType.EPaper.Column,
             Option(url), Option(columnName),
@@ -88,9 +88,12 @@ object 光明日报 extends EPaperTask("光明日报电子报", "光明日报") 
 
     item.`type` match {
       case FetchType.EPaper.Column =>
-        val columnName = doc.select("div.list_l div.l_t").text.trim
+        val columnName = doc.select("table#table5 td").asScala
+          .headOption
+          .map(_.text.replaceAll(" ", ""))
+          .getOrElse("Unknown")
 
-        if (url.endsWith("nbs.D110000gmrb_01.htm")) {
+        if (url.endsWith("Page01HO.htm")) {
           //第一版，提取文章和列表url
           ParseResult(extractArticleUrls(columnName) ::: extractColumnUrls(), None)
         } else {
@@ -100,44 +103,52 @@ object 光明日报 extends EPaperTask("光明日报电子报", "光明日报") 
       case FetchType.EPaper.Article =>
         val column = item.params("column")
         val rank = item.params("rank").toInt
-        val pubDate = "[\\d]{4}\\-[\\d]{2}/[\\d]{2}".r.findFirstIn(url)
-          .map(_.replace("/", "-"))
+        val pubDate = "[\\d]{8}".r.findFirstIn(url)
+          .map {
+            d =>
+              d.substring(0, 4) + "-" + d.substring(4, 6) + "-" + d.substring(6)
+          }
           .getOrElse("")
 
-        //val title =
-        val title = doc.select("div.text_c").asScala
-          .flatMap(_.children().asScala) //去除所有子节点
-          .filter {
+        //http://mrdx.cn/content/20190208/Articel04002BB.htm
+        val title = doc.select("span#contenttext div strong[style*=23px]").text()
+
+        val author = ""
+
+        val html = doc.select("span#contenttext font").html
+
+        val children = doc.select("span#contenttext font").asScala
+          .flatMap(_.childNodes.asScala)
+
+        val nodes = children.filterNot {
           n =>
-            val name = n.nodeName
-            name == "h1" || name == "h2" //保留所有的h1, h2标记
+            (n.isInstanceOf[TextNode] && n.asInstanceOf[TextNode].text().trim == "") ||
+              (n.isInstanceOf[Element] && n.asInstanceOf[Element].text().trim == "")
         }
-          .map(_.text().trim)
-          .filter(_.nonEmpty)
-          .mkString(" ")
 
-        val author = doc.select("div.text_c div.lai span").asScala
-          .map(_.text().trim)
-          .filter(_.startsWith("作者："))
-          .map(_.substring(3))
-          .mkString(" ")
+        val text = nodes.map {
+          n =>
+            if (n.isInstanceOf[TextNode])
+              n.asInstanceOf[TextNode].text()
+            else if (n.isInstanceOf[Element])
+              n.asInstanceOf[Element].text()
+            else ""
+        }.mkString("\n")
 
-        val html = doc.select("div.text_c").html
-        val text = doc.select("div.text_c div.c_c p").asScala.map(_.text).mkString("\n")
         val id = HashUtil.md5(url)
 
         val article = EPaperArticle(
           id,
           url, title, author,
           pubDate,
-          "光明日报",
+          "新华每日电讯",
           column,
           rank,
           text, html)
 
         ParseResult(List.empty, Some(article))
       case _ =>
-        throw OctopusException(s"光明日报任务无法识别的抓取条目: $item")
+        throw OctopusException(s"新华每日电讯任务无法识别的抓取条目: $item")
     }
   }
 
