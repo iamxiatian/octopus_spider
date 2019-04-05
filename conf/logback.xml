@@ -41,7 +41,7 @@
         <appender-ref ref="FILE"/>
     </logger>
 
-    <logger name="xiatian" level="ERROR">
+    <logger name="xiatian" level="INFO">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </logger>

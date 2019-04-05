@@ -3,7 +3,7 @@ package xiatian.octopus.actor.store
 import akka.actor.Actor
 import com.google.common.hash.Hashing
 import xiatian.octopus.actor.ActorWatching
-import xiatian.octopus.common.Symbols
+import xiatian.octopus.common.{Logging, Symbols}
 import xiatian.octopus.model.FetchItem
 import xiatian.octopus.parse.ParsedData
 import xiatian.octopus.task.epaper.{EPaperArticle, EPaperArticleDb}
@@ -29,16 +29,25 @@ class StoreActor extends Actor with ActorWatching {
 
   override def receive: Receive = {
     case StoreMessage(item, parsedData) =>
-      parsedData match {
-        case article: EPaperArticle =>
-          //println(s"${article.title}")
-          Await.result(EPaperArticleDb.save(article), Duration.Inf)
-          print(Symbols.SAVE_DB)
-        //process
-        case _ =>
-          LOG.error(s"竟不知如何保存该类型的数据~~~ $item")
-      }
+      Store.save(item, parsedData)
   }
 }
 
 case class StoreMessage(item: FetchItem, parsedData: ParsedData)
+
+/**
+  * 执行具体保存的逻辑代码
+  */
+object Store extends Logging {
+  def save(item: FetchItem, parsedData: ParsedData) = {
+    parsedData match {
+      case article: EPaperArticle =>
+        //println(s"${article.title}")
+        Await.result(EPaperArticleDb.save(article), Duration.Inf)
+        print(Symbols.SAVE_DB)
+      //process
+      case _ =>
+        LOG.error(s"竟不知如何保存该类型的数据~~~ $item")
+    }
+  }
+}

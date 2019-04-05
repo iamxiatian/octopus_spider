@@ -20,6 +20,22 @@ Octopus: A distributed web spider based on AKKA+Scala
 ### Install Mysql
 ```$sql
 CREATE SCHEMA `octopus` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin ;
+
+CREATE TABLE `epaper_article` (
+  `id` varchar(254) COLLATE utf8_bin NOT NULL,
+  `url` varchar(250) COLLATE utf8_bin NOT NULL,
+  `title` varchar(250) COLLATE utf8_bin NOT NULL,
+  `subtitle` varchar(250) COLLATE utf8_bin NOT NULL,
+  `author` varchar(250) COLLATE utf8_bin NOT NULL,
+  `pub_date` varchar(50) COLLATE utf8_bin NOT NULL,
+  `media` varchar(50) COLLATE utf8_bin NOT NULL,
+  `page` varchar(50) COLLATE utf8_bin NOT NULL,
+  `rank` int(11) NOT NULL,
+  `text` mediumtext COLLATE utf8_bin NOT NULL,
+  `html` mediumtext COLLATE utf8_bin NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 ```
 
 ### Compile
@@ -52,6 +68,8 @@ FetchItem: 表示一个被抓取的条目，一个FetchItem除了value等基本�
 
 ## 更改历史
 
+- 保存处理，由StoreActor异步保存改为同步保存，以便当保存失败时可以重复抓取
+- 电子报采集的文章增加副标题subTitle
 - 可以编译运行并高效抓取电子报，版本升级到2.0
 - 完成了电子报采集逻辑的处理，并成功加入了一个示例
 - 引入slick处理关系性数据库，采集结果目前暂时存入MySQL，方便观察调试

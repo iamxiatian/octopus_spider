@@ -12,11 +12,11 @@ import scala.util.Try
 
 object 人民日报 extends EPaperTask("人民日报电子报", "人民日报") with Parser {
   override def entryItems: List[FetchItem] = {
-    //默认返回最近一月的入口地址, 减去12小时，保证本天的第一次采集时间在12点之后
+    //默认返回最近一月的入口地址, 减去8小时，保证本天的第一次采集时间在8点之后
 
     (0 to 30).toList.map {
       days =>
-        val d = DateTime.now().minusHours(12).minusDays(days)
+        val d = DateTime.now().minusHours(8).minusDays(days)
 
         //http://paper.people.com.cn/rmrb/html/2019-03/01/nbs.D110000renmrb_01.htm
         val pattern = d.toString("yyyy-MM/dd")
@@ -90,13 +90,16 @@ object 人民日报 extends EPaperTask("人民日报电子报", "人民日报") 
       case FetchType.EPaper.Column =>
         val columnName = doc.select("div.list_l div.l_t").text.trim
 
-        if (url.endsWith("nbs.D110000renmrb_01.htm")) {
+        val r = if (url.endsWith("nbs.D110000renmrb_01.htm")) {
           //第一版，提取文章和列表url
           ParseResult(extractArticleUrls(columnName) ::: extractColumnUrls(), None)
         } else {
           // 非第一版，只提取文章url
           ParseResult(extractArticleUrls(columnName), None)
         }
+        if(r.children.isEmpty)
+          throw OctopusException(s"栏目未抽取出子链接! ${item.url}")
+        else r
       case FetchType.EPaper.Article =>
         val column = item.params("column")
         val rank = item.params("rank").toInt
@@ -128,7 +131,8 @@ object 人民日报 extends EPaperTask("人民日报电子报", "人民日报") 
 
         val article = EPaperArticle(
           id,
-          url, title, author,
+          url, title, "",
+          author,
           pubDate,
           "人民日报",
           column,

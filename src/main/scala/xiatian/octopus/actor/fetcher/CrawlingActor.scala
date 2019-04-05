@@ -1,7 +1,7 @@
 package xiatian.octopus.actor.fetcher
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import xiatian.octopus.actor.store.StoreMessage
+import xiatian.octopus.actor.store.{Store, StoreMessage}
 import xiatian.octopus.actor.{Fetch, FetchCode, FetchResult}
 import xiatian.octopus.common.Logging
 import xiatian.octopus.task.FetchTask
@@ -37,7 +37,9 @@ class CrawlingActor(storeClient: ActorRef) extends Actor with ActorLogging {
             case Some(task) =>
               val parseResult = task.parser.get.parse(item, response).get
               if (parseResult.data.nonEmpty) {
-                storeClient ! StoreMessage(item, parseResult.data.get)
+                //storeClient ! StoreMessage(item, parseResult.data.get)
+                //该为直接保存，方便捕捉异常，保存出错时，Master会继续抓取该链接
+                Store.save(item, parseResult.data.get)
               }
               sender() ! FetchResult(fetcherId, FetchCode.Ok, item,
                 parseResult.children)

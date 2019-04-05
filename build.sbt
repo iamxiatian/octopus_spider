@@ -87,11 +87,11 @@ libraryDependencies += "com.ibm.icu" % "icu4j" % "53.1" //domain process
 libraryDependencies += "org.jsoup" % "jsoup" % "1.11.2"
 
 //scala语法的简单的HTTP包
-libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.3.0"
+libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.4.1"
 
 //NLP libraries
-//libraryDependencies += "com.hankcs" % "hanlp" % "portable-1.5.2"
-libraryDependencies += "org.ansj" % "ansj_seg" % "5.1.1"
+libraryDependencies += "com.hankcs" % "hanlp" % "portable-1.7.2"
+//libraryDependencies += "org.ansj" % "ansj_seg" % "5.1.1"
 libraryDependencies += "org.ahocorasick" % "ahocorasick" % "0.3.0"
 
 libraryDependencies += "org.apache.opennlp" % "opennlp-tools" % "1.8.4"

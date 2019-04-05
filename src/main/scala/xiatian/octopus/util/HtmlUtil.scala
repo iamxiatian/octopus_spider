@@ -20,6 +20,9 @@ object HtmlUtil {
     * @param html
     */
   def text(html: String): String = {
+    //后续可采用Jsoup取代该方法
+    //Jsoup.parse(html).text()
+
     val body = Jsoup.parse(html).selectFirst("body")
     //递归遍历每一个元素
     val sb = new mutable.StringBuilder()

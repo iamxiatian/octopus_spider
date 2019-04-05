@@ -3,8 +3,7 @@ package xiatian.octopus.task.epaper
 import xiatian.octopus.parse.ParsedData
 import xiatian.octopus.storage.rdb.Repo
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.util.Try
 
 /**
@@ -21,6 +20,7 @@ import scala.util.Try
 case class EPaperArticle(id: String,
                          url: String,
                          title: String,
+                         subtitle: String,
                          author: String,
                          pubDate: String, //yyyy-MM-dd格式的日期
                          media: String, //电子报来源, 如人民日报
@@ -44,6 +44,8 @@ object EPaperArticleDb extends Repo[EPaperArticle] {
 
     def title = column[String]("title", O.Length(250))
 
+    def subtitle = column[String]("subtitle", O.Length(250))
+
     def author = column[String]("author", O.Length(250))
 
     def pubDate = column[String]("pub_date", O.Length(50))
@@ -58,7 +60,8 @@ object EPaperArticleDb extends Repo[EPaperArticle] {
 
     def html = column[String]("html", O.SqlType("MEDIUMTEXT"))
 
-    def * = (id, url, title, author, pubDate, media, page, rank, text, html) <>
+    def * = (id, url, title, subtitle, author,
+      pubDate, media, page, rank, text, html) <>
       (EPaperArticle.tupled, EPaperArticle.unapply)
   }
 

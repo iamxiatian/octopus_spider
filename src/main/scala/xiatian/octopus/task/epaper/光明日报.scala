@@ -16,7 +16,7 @@ object 光明日报 extends EPaperTask("光明日报电子报", "光明日报") 
 
     (0 to 30).toList.map {
       days =>
-        val d = DateTime.now().minusHours(12).minusDays(days)
+        val d = DateTime.now().minusHours(8).minusDays(days)
 
         //http://epaper.gmw.cn/gmrb/html/2019-03/12/nbs.D110000gmrb_01.htm
         val pattern = d.toString("yyyy-MM/dd")
@@ -90,13 +90,17 @@ object 光明日报 extends EPaperTask("光明日报电子报", "光明日报") 
       case FetchType.EPaper.Column =>
         val columnName = doc.select("div.list_l div.l_t").text.trim
 
-        if (url.endsWith("nbs.D110000gmrb_01.htm")) {
+        val r = if (url.endsWith("nbs.D110000gmrb_01.htm")) {
           //第一版，提取文章和列表url
           ParseResult(extractArticleUrls(columnName) ::: extractColumnUrls(), None)
         } else {
           // 非第一版，只提取文章url
           ParseResult(extractArticleUrls(columnName), None)
         }
+
+        if(r.children.isEmpty)
+          throw OctopusException(s"栏目未抽取出子链接! ${item.url}")
+        else r
       case FetchType.EPaper.Article =>
         val column = item.params("column")
         val rank = item.params("rank").toInt
@@ -128,7 +132,8 @@ object 光明日报 extends EPaperTask("光明日报电子报", "光明日报") 
 
         val article = EPaperArticle(
           id,
-          url, title, author,
+          url, title, "",
+          author,
           pubDate,
           "光明日报",
           column,

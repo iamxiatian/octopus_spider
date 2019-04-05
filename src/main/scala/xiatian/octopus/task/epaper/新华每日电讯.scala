@@ -1,7 +1,6 @@
 package xiatian.octopus.task.epaper
 
 import org.joda.time.DateTime
-import org.jsoup.nodes.{Element, TextNode}
 import org.zhinang.protocol.http.UrlResponse
 import xiatian.octopus.common.OctopusException
 import xiatian.octopus.model.{FetchItem, FetchType}
@@ -20,7 +19,7 @@ object 新华每日电讯 extends EPaperTask("新华每日电讯电子报", "新
 
     (0 to 30).toList.map {
       days =>
-        val d = DateTime.now().minusHours(12).minusDays(days)
+        val d = DateTime.now().minusHours(8).minusDays(days)
 
         //http://mrdx.cn/content/20190208/Page01HO.htm
         val pattern = d.toString("yyyyMMdd")
@@ -93,13 +92,18 @@ object 新华每日电讯 extends EPaperTask("新华每日电讯电子报", "新
           .map(_.text.replaceAll(" ", ""))
           .getOrElse("Unknown")
 
-        if (url.endsWith("Page01HO.htm")) {
+        val r = if (url.endsWith("Page01HO.htm")) {
           //第一版，提取文章和列表url
           ParseResult(extractArticleUrls(columnName) ::: extractColumnUrls(), None)
         } else {
           // 非第一版，只提取文章url
           ParseResult(extractArticleUrls(columnName), None)
         }
+
+        if (r.children.isEmpty)
+          throw OctopusException(s"栏目未抽取出子链接! ${item.url}")
+        else r
+
       case FetchType.EPaper.Article =>
         val column = item.params("column")
         val rank = item.params("rank").toInt
@@ -111,35 +115,24 @@ object 新华每日电讯 extends EPaperTask("新华每日电讯电子报", "新
           .getOrElse("")
 
         //http://mrdx.cn/content/20190208/Articel04002BB.htm
-        val title = doc.select("span#contenttext div strong[style*=23px]").text()
+
+        val pos = doc.title.lastIndexOf("--")
+
+        val title = if (pos > 0) doc.title.substring(pos + 2).trim
+        else doc.title.trim
 
         val author = ""
 
-        val html = doc.select("span#contenttext font").html
+        val html = doc.select("span#contenttext").html()
 
-        val children = doc.select("span#contenttext font").asScala
-          .flatMap(_.childNodes.asScala)
-
-        val nodes = children.filterNot {
-          n =>
-            (n.isInstanceOf[TextNode] && n.asInstanceOf[TextNode].text().trim == "") ||
-              (n.isInstanceOf[Element] && n.asInstanceOf[Element].text().trim == "")
-        }
-
-        val text = nodes.map {
-          n =>
-            if (n.isInstanceOf[TextNode])
-              n.asInstanceOf[TextNode].text()
-            else if (n.isInstanceOf[Element])
-              n.asInstanceOf[Element].text()
-            else ""
-        }.mkString("\n")
+        val text = doc.select("span#contenttext").text.replaceAll(" 　　", "\n")
 
         val id = HashUtil.md5(url)
 
         val article = EPaperArticle(
           id,
-          url, title, author,
+          url, title, "",
+          author,
           pubDate,
           "新华每日电讯",
           column,
