@@ -85,6 +85,17 @@ object ArchiveExpt {
         }
     }
 
+    println("process shaaxi ...")
+    ShaanxiArchive.getPageList foreach {
+      pair =>
+        ShaanxiArchive.parsePage(pair._1, pair._2)
+    }
+
+    println("process guangxi ...")
+    GuangxiArchive.getPageList foreach {
+      pair =>
+        GuangxiArchive.parseList(pair._1, pair._2)
+    }
   }
 
   def main(args: Array[String]): Unit = {

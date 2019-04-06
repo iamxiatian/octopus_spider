@@ -100,11 +100,11 @@ object TianjinArchive {
       e.printStackTrace()
   }
 
-  def main(args: Array[String]): Unit = {
-    Await.result(ArchiveConsultDb.createSchema, Duration.Inf)
-    getAllPageList foreach {
-      pair =>
-        parsePage(pair._1, pair._2)
-    }
-  }
+//  def main(args: Array[String]): Unit = {
+//    Await.result(ArchiveConsultDb.createSchema, Duration.Inf)
+//    getAllPageList foreach {
+//      pair =>
+//        parsePage(pair._1, pair._2)
+//    }
+//  }
 }

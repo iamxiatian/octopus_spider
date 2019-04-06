@@ -115,15 +115,15 @@ object SichuanArchive {
     }
   }
 
-  def main(args: Array[String]): Unit = {
-    //Await.result(ArchiveConsultDb.createSchema, Duration.Inf)
-    (20 to 43) foreach {
-      page =>
-        println(s"process page $page ... ")
-        parsePage(page).foreach {
-          article =>
-            Await.result(ArchiveConsultDb.save(article), Duration.Inf)
-        }
-    }
-  }
+//  def main(args: Array[String]): Unit = {
+//    //Await.result(ArchiveConsultDb.createSchema, Duration.Inf)
+//    (20 to 43) foreach {
+//      page =>
+//        println(s"process page $page ... ")
+//        parsePage(page).foreach {
+//          article =>
+//            Await.result(ArchiveConsultDb.save(article), Duration.Inf)
+//        }
+//    }
+//  }
 }

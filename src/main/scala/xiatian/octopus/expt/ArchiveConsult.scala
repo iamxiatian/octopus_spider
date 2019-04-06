@@ -100,4 +100,7 @@ object ArchiveConsultDb extends Repo[ArchiveConsult] {
       }
   }
 
+  def exists(code: String, site: String): Future[Boolean] = db run {
+    entities.filter(e => e.code === code && e.site === site).exists.result
+  }
 }
