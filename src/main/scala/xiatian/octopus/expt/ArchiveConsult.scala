@@ -18,9 +18,11 @@ case class ArchiveConsult(code: String,
                           askContent: String,
                           status: String,
                           replyTime: Timestamp,
+                          replier: String,
                           replyContent: String,
                           url: String,
                           urlMd5: String,
+                          viewCount: Int,
                           category: String,
                           site: String
                          ) extends ParsedData
@@ -48,18 +50,22 @@ object ArchiveConsultDb extends Repo[ArchiveConsult] {
 
     def replyTime = column[Timestamp]("reply_time", O.SqlType("datetime"))
 
+    def replier = column[String]("replier", O.Length(50))
+
     def replyContent = column[String]("reply_content", O.SqlType("TEXT"))
 
     def url = column[String]("url", O.Length(250))
 
     def urlMd5 = column[String]("url_md5", O.Length(50), O.PrimaryKey)
 
+    def viewCount = column[Int]("view_count")
+
     def category = column[String]("category", O.Length(20))
 
     def site = column[String]("site", O.Length(20))
 
     def * = (code, title, person, askTime, askContent, status, replyTime,
-      replyContent, url, urlMd5, category, site) <>
+      replier, replyContent, url, urlMd5, viewCount, category, site) <>
       (ArchiveConsult.tupled, ArchiveConsult.unapply)
   }
 

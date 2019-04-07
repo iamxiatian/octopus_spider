@@ -85,9 +85,11 @@ object TianjinArchive {
       new java.sql.Timestamp(format.parse(askTime).getTime),
       askContent, status,
       new java.sql.Timestamp(format.parse(replyTime).getTime),
+      "",
       replyContent,
       articleUrl,
       urlMd5,
+      0,
       category,
       "Tianjin"
     )

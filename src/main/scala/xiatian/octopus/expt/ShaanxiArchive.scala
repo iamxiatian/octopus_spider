@@ -59,9 +59,11 @@ object ShaanxiArchive {
       new java.sql.Timestamp(df.parse(askTime).getTime),
       askContent, status,
       new java.sql.Timestamp(df.parse(replyTime).getTime),
+      "",
       replyContent,
       articleUrl,
       urlMd5,
+      0,
       category,
       "Shaanxi"
     )

@@ -106,9 +106,11 @@ object SichuanArchive {
           Jsoup.parse(askContent).text(),
           status,
           new Timestamp(df.parse(s"$replyDate $replyTime").getTime),
+          "",
           Jsoup.parse(replyContent).text(),
           url,
           urlMd5,
+          0,
           category,
           "Sichuan"
         )

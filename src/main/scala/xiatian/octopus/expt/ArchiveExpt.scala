@@ -66,8 +66,8 @@ object ArchiveExpt {
   }
 
   def build(args: Array[String]): Unit = {
-    Await.result(ArchiveConsultDb.dropSchema, Duration.Inf)
-    Await.result(ArchiveConsultDb.createSchema, Duration.Inf)
+//    Await.result(ArchiveConsultDb.dropSchema, Duration.Inf)
+//    Await.result(ArchiveConsultDb.createSchema, Duration.Inf)
 
     println("Process Tianjin ...")
     TianjinArchive.getAllPageList foreach {
@@ -96,6 +96,9 @@ object ArchiveExpt {
       pair =>
         GuangxiArchive.parseList(pair._1, pair._2)
     }
+
+//    println("process zhejiang ...")
+//    ZhejiangArchive.startParse()
   }
 
   def main(args: Array[String]): Unit = {
