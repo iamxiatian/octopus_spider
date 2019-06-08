@@ -103,6 +103,9 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-parser"
 ).map(_ % "0.10.1")
 
+//gexf
+libraryDependencies += "it.uniroma1.dis.wsngroup.gexf4j" % "gexf4j" % "1.0.0"
+
 //Scala Test library
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 

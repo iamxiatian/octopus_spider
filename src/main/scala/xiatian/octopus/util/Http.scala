@@ -3,6 +3,7 @@ package xiatian.octopus.util
 import java.io.{ByteArrayInputStream, File}
 
 import com.google.common.io.Files
+import org.apache.http.client.methods.CloseableHttpResponse
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.zhinang.protocol.http.{HttpClientAgent, UrlResponse}
@@ -151,4 +152,94 @@ object Http extends Logging {
       response.getEncoding,
       response.getUrl.toString)
   }
+}
+
+/**
+  * 支持cookie的HTTP处理
+  */
+class CookieHttp(domain: String, cookiePath: String) {
+
+  import org.apache.http.client.config.CookieSpecs
+  import org.apache.http.client.methods.HttpGet
+  import org.apache.http.client.protocol.HttpClientContext
+  import org.apache.http.config.RegistryBuilder
+  import org.apache.http.cookie.CookieSpecProvider
+  import org.apache.http.impl.client.{BasicCookieStore, HttpClients}
+  import org.apache.http.impl.cookie.{BasicClientCookie, BestMatchSpecFactory, BrowserCompatSpecFactory}
+  import org.apache.http.util.EntityUtils
+
+
+  private def getSessionId(httpResponse: CloseableHttpResponse): Option[String] = {
+    // JSESSIONID
+    if (httpResponse.getFirstHeader("Set-Cookie") != null) {
+      val setCookie = httpResponse.getFirstHeader("Set-Cookie").getValue
+      val sessionId = setCookie.substring("JSESSIONID=".length, setCookie.indexOf(";"))
+      //println("JSESSIONID:" + sessionId)
+
+      Option(sessionId)
+    } else None
+  }
+
+  def get(url: String, sessionId: Option[String] = None): Response = {
+    val httpGet = new HttpGet(url)
+
+    val httpResponse = sessionId match {
+      case Some(jsessionId) =>
+        //根究sessionId构造cookie
+        val cookieStore = new BasicCookieStore()
+
+        // 新建一个Cookie
+        val cookie = new BasicClientCookie("JSESSIONID", jsessionId)
+        cookie.setVersion(0)
+        cookie.setDomain(domain)
+        cookie.setPath(cookiePath)
+        cookieStore.addCookie(cookie)
+
+        //设置上下文
+        val context: HttpClientContext = HttpClientContext.create
+        val registry = RegistryBuilder.create[CookieSpecProvider].register(CookieSpecs.BEST_MATCH, new BestMatchSpecFactory).register(CookieSpecs.BROWSER_COMPATIBILITY, new BrowserCompatSpecFactory).build
+        context.setCookieSpecRegistry(registry)
+        context.setCookieStore(cookieStore)
+
+        val client = HttpClients.custom().setDefaultCookieStore(cookieStore).build();
+
+        client.execute(httpGet)
+      case None =>
+        val client = HttpClients.createDefault
+
+        client.execute(httpGet)
+    }
+
+    parseResponse(httpResponse)
+  }
+
+  private def parseResponse(httpResponse: CloseableHttpResponse): Response = {
+    // 获取响应消息实体
+    val entity = httpResponse.getEntity
+
+    val code = httpResponse.getStatusLine.getStatusCode
+    val sessionId = getSessionId(httpResponse)
+
+    //    // 响应状态
+    System.out.println("status:" + httpResponse.getStatusLine)
+    System.out.println("headers:")
+    val iterator = httpResponse.headerIterator
+    while ( {
+      iterator.hasNext
+    }) System.out.println("\t" + iterator.next)
+
+    // 判断响应实体是否为空
+    val content = if (entity != null) {
+      Option(EntityUtils.toByteArray(entity))
+    } else {
+      None
+    }
+
+    Response(code, sessionId, content)
+  }
+
+  case class Response(code: Int,
+                      sessionId: Option[String],
+                      content: Option[Array[Byte]])
+
 }

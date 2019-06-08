@@ -83,6 +83,10 @@ object ArchiveConsultDb extends Repo[ArchiveConsult] {
     entities.result
   }
 
+  def listWithoutSite(site: String): Future[Seq[ArchiveConsult]] = db run {
+    entities.filter(_.site =!= site).result
+  }
+
   def findByCode(code: String): Future[Option[ArchiveConsult]] = db.run {
     entities.filter(_.code === code).result.headOption
   }

@@ -5,5 +5,5 @@ package xiatian.octopus
   * 档案试验的入口地址在：ArchiveExpt
   */
 package object expt {
-
+  import scala.collection.JavaConverters._
 }
