@@ -134,6 +134,7 @@ object ArchiveExpt {
         val pairs = acceptBigrams(keepWords, a.title) ::: acceptBigrams(keepWords,
           a.askContent) ::: acceptBigrams(keepWords, a.replyContent)
 
+
         pairs.foreach {
           bigram =>
             bigramCache(bigram) = bigramCache.getOrElse(bigram, 0) + 1
@@ -500,34 +501,10 @@ object ArchiveExpt {
   }
 
   def toGexf(topKeywords: Int = 200): Unit = {
-    import it.uniroma1.dis.wsngroup.gexf4j.core.EdgeType
-    import it.uniroma1.dis.wsngroup.gexf4j.core.Gexf
-    import it.uniroma1.dis.wsngroup.gexf4j.core.Mode
-    import it.uniroma1.dis.wsngroup.gexf4j.core.data.AttributeClass
-    import it.uniroma1.dis.wsngroup.gexf4j.core.data.AttributeType
-    import it.uniroma1.dis.wsngroup.gexf4j.core.impl.GexfImpl
-
-    val gexf = new GexfImpl
-
-    gexf.getMetadata.setLastModified(new Date())
-      .setCreator("Xia Tian")
-      .setDescription("A Web network")
-
-    gexf.setVisualization(true)
-
-    val graph = gexf.getGraph
-    graph.setDefaultEdgeType(EdgeType.DIRECTED).setMode(Mode.STATIC)
-
-    val attrList = new AttributeListImpl(AttributeClass.NODE)
-    graph.getAttributeLists.add(attrList)
-
-    val attUrl = attrList.createAttribute("class", AttributeType.INTEGER, "Class")
-    val attIndegree = attrList.createAttribute("pageranks", AttributeType.DOUBLE, "PageRank")
-
 
     //处理数据
     val candidateWords = WordRepo.topAskWords(topKeywords).map(_.name).toSet
-    val bigramsCandidate: Seq[BiWord] = Await.result(BiWordRepo.list(3000), Duration.Inf)
+    val bigramsCandidate: Seq[BiWord] = Await.result(BiWordRepo.list(2000), Duration.Inf)
       .filter {
         b =>
           val Array(first, second) = b.bigram.split("-")
@@ -553,25 +530,59 @@ object ArchiveExpt {
     }
 
 
-    //把节点大小缩放到10~100之间
+    import it.uniroma1.dis.wsngroup.gexf4j.core.EdgeType
+    import it.uniroma1.dis.wsngroup.gexf4j.core.Gexf
+    import it.uniroma1.dis.wsngroup.gexf4j.core.Mode
+    import it.uniroma1.dis.wsngroup.gexf4j.core.data.AttributeClass
+    import it.uniroma1.dis.wsngroup.gexf4j.core.data.AttributeType
+    import it.uniroma1.dis.wsngroup.gexf4j.core.impl.GexfImpl
+
+    val gexf = new GexfImpl
+
+    gexf.getMetadata.setLastModified(new Date())
+      .setCreator("Gephi.org")
+      .setDescription("A Web network")
+
+    gexf.setVisualization(true)
+
+    val graph = gexf.getGraph
+    graph.setDefaultEdgeType(EdgeType.DIRECTED)
+
+    val attrList = new AttributeListImpl(AttributeClass.NODE)
+    graph.getAttributeLists.add(attrList)
+
+    val attCount = attrList.createAttribute("count", AttributeType.INTEGER, "Count")
+//    val attIndegree = attrList.createAttribute("pageranks", AttributeType.DOUBLE, "PageRank")
+
+
+    //把节点大小缩放到1~10之间
     val minScore = nodeScores.values.min
     val maxScore = nodeScores.values.max
 
+    val nameNodeMap = mutable.Map.empty[String, Node]
     //创建gexf node
-    nodeScores foreach {
-      case (n, score) =>
+    nodeScores.zipWithIndex.foreach {
+      case ((name, score), idx) =>
         //val w = (Math.log(score / minScore)*5/Math.log(2)).toInt + 10
-        val w = ((score - minScore) * 1.0 / (maxScore - minScore) * 90 + 10).toInt
-        graph.createNode(n).setLabel(n).setSize(w)
+        val w = ((score - minScore) * 1.0 / (maxScore - minScore) * 30 + 20).toInt
+        val gexfNode = graph.createNode(idx.toString).setLabel(name).setSize(w)
+        gexfNode.getAttributeValues.addValue(attCount, score.toString)
+        nameNodeMap(name) = gexfNode
+        gexfNode
     }
 
     //create edge
+    var edgeId = 0
     bigrams foreach {
       b =>
         val Array(first, second) = b.bigram.split("-")
-        graph.getNode(first).connectTo(graph.getNode(second))
+        val firstNode = nameNodeMap(first)
+        val secondNode = nameNodeMap(second)
+        firstNode.connectTo(edgeId.toString, b.amount.toString, EdgeType.DIRECTED, secondNode).setWeight(Math.log(b.amount).toFloat + 1.0f)
+        edgeId = edgeId + 1
     }
 
+    //output
     import it.uniroma1.dis.wsngroup.gexf4j.core.impl.StaxGraphWriter
     val graphWriter = new StaxGraphWriter
     val out = File("/home/xiatian/writing/archive-consulting/g.gexf").newOutputStream()
