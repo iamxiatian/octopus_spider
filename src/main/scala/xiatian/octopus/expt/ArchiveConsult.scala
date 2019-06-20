@@ -122,7 +122,13 @@ object ArchiveConsultDb extends Repo[ArchiveConsult] {
     * @return
     */
   def replace(s: String): String = {
-    
+    val regex = "1[35789]\\d{9}".r
+    val it = regex.findAllIn(s)
+    val phones= it.toList
+
+    val ids = s"(\\d{18}|\\d{15})${}".r.findAllIn(s).toList
+
+    ""
   }
 
   /**
