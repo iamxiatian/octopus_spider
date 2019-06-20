@@ -6,7 +6,8 @@ import xiatian.octopus.parse.ParsedData
 import xiatian.octopus.storage.rdb.Repo
 import xiatian.octopus.util.HashUtil
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.Duration
 import scala.util.Try
 
 /**
@@ -112,5 +113,79 @@ object ArchiveConsultDb extends Repo[ArchiveConsult] {
 
   def exists(code: String, site: String): Future[Boolean] = db run {
     entities.filter(e => e.code === code && e.site === site).exists.result
+  }
+
+  /**
+    * 将字符串中的手机、电话号码、电子邮箱和身份证号码替换成名字形式，
+    * 分别为：[PHONE], [TEL], [EMAIL]，[ID]
+    * @param s
+    * @return
+    */
+  def replace(s: String): String = {
+    
+  }
+
+  /**
+    * 把数据库里面的档案交互数据转存为XML格式，保存到filename对应的文件中
+    */
+  def toXML(filename: String) = {
+    import scala.xml.XML
+
+    val records = Await.result(ArchiveConsultDb.list, Duration.Inf)
+    val items = records.map {
+      record =>
+        <record>
+          <site>
+            {record.site}
+          </site>
+          <url>
+            {record.url}
+          </url>
+          <url_md5>
+            {record.urlMd5}
+          </url_md5>
+          <code>
+            {record.code}
+          </code>
+          <title>
+            {record.title}
+          </title>
+          <person>
+            {record.person}
+          </person>
+          <ask_time>
+            {record.askTime}
+          </ask_time>
+          <ask_content>
+            {record.askContent}
+          </ask_content>
+          <replier>
+            {record.replier}
+          </replier>
+          <reply_time>
+            {record.replyTime}
+          </reply_time>
+          <reply_content>
+            {record.replyContent}
+          </reply_content>
+          <view_count>
+            {record.viewCount}
+          </view_count>
+          <category>
+            {record.category}
+          </category>
+        </record>
+    }
+
+    val doc = <records>
+      {items}
+    </records>
+
+    XML.save(filename, doc, "UTF-8", true, null)
+  }
+
+  def main(args: Array[String]): Unit = {
+    val filename = "/home/xiatian/writing/archive-consulting/data/dataset.xml"
+    toXML(filename)
   }
 }
