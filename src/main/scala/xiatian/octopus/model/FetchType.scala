@@ -1,7 +1,7 @@
 package xiatian.octopus.model
 
 /**
-  * 定义了各种链接类型，链接的解析抽取、抽取结果保存都由链接类型确定，
+  * 定义了各种抓取类型，链接的解析抽取、抽取结果保存都由抓取类型确定，
   * 如果采用trait，会导致akka远程通信出现问题
   */
 abstract class FetchType extends Serializable {
@@ -21,7 +21,7 @@ object FetchType {
   final val PRIORITY_HIGH = 20
   final val PRIORITY_NORMAL = 10
 
-  def apply(id: Int): FetchType = id match {
+  def get(id: Int): FetchType = id match {
     case ArticlePage.id => ArticlePage
     case HubPage.id => HubPage
     case EPaper.Column.id => EPaper.Column

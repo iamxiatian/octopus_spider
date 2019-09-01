@@ -23,12 +23,14 @@ object 人民日报 extends EPaperTask("人民日报电子报", "人民日报") 
         val url = s"http://paper.people.com.cn/rmrb/html/$pattern/" +
           s"nbs.D110000renmrb_01.htm"
 
-        FetchItem(url, FetchType.EPaper.Column,
+        FetchItem(
+          id,
+          url,
+          FetchType.EPaper.Column,
           Option("http://paper.people.com.cn/"),
           None,
           1,
-          0,
-          id
+          0
         )
     }
   }
@@ -57,11 +59,12 @@ object 人民日报 extends EPaperTask("人民日报电子报", "人民日报") 
             text.substring(first + 1, last).trim
           else text
 
-          FetchItem(link, FetchType.EPaper.Article,
+          FetchItem(
+            item.taskId,
+            link, FetchType.EPaper.Article,
             Option(url), Option(anchor),
             item.depth + 1,
             0,
-            item.taskId,
             Map("column" -> column, "rank" -> (idx + 1).toString)
           )
       }.toList
@@ -75,11 +78,12 @@ object 人民日报 extends EPaperTask("人民日报电子报", "人民日报") 
           val link = a.attr("abs:href")
           val columnName = a.text.trim
 
-          FetchItem(link, FetchType.EPaper.Column,
+          FetchItem(
+            item.taskId,
+            link, FetchType.EPaper.Column,
             Option(url), Option(columnName),
             item.depth + 1,
             0,
-            item.taskId,
             Map.empty
           )
       }.toList

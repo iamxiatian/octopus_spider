@@ -25,12 +25,13 @@ object 新华每日电讯 extends EPaperTask("新华每日电讯电子报", "新
         val pattern = d.toString("yyyyMMdd")
         val url = s"http://mrdx.cn/content/$pattern/Page01HO.htm"
 
-        FetchItem(url, FetchType.EPaper.Column,
+        FetchItem(
+          id,
+          url, FetchType.EPaper.Column,
           Option("http://www.xinhuanet.com/mrdx/"),
           None,
           1,
-          0,
-          id
+          0
         )
     }
   }
@@ -55,11 +56,12 @@ object 新华每日电讯 extends EPaperTask("新华每日电讯电子报", "新
           val link = a.attr("abs:href")
           val anchor = a.text().trim
 
-          FetchItem(link, FetchType.EPaper.Article,
+          FetchItem(
+            item.taskId,
+            link, FetchType.EPaper.Article,
             Option(url), Option(anchor),
             item.depth + 1,
             0,
-            item.taskId,
             Map("column" -> column, "rank" -> (idx + 1).toString)
           )
       }.toList
@@ -74,11 +76,12 @@ object 新华每日电讯 extends EPaperTask("新华每日电讯电子报", "新
           val link = a.attr("abs:href")
           val columnName = a.text.trim.replaceAll(" ", "")
 
-          FetchItem(link, FetchType.EPaper.Column,
+          FetchItem(
+            item.taskId,
+            link, FetchType.EPaper.Column,
             Option(url), Option(columnName),
             item.depth + 1,
             0,
-            item.taskId,
             Map.empty
           )
       }.toList

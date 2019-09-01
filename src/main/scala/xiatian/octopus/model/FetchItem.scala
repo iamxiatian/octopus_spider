@@ -18,13 +18,13 @@ import scala.util.{Failure, Success, Try}
   * @param `type`  类型
   * @param taskId  : 表明该链接是由哪个栏目抓取得到的，如果为"auto"， 则通过自动抽取进行处理
   */
-case class FetchItem(value: String,
+case class FetchItem(taskId: String,
+                     value: String,
                      `type`: FetchType,
                      refer: Option[String] = None,
                      anchor: Option[String] = None,
                      depth: Int = 0,
                      retries: Byte = 0, //最大为20,超过100则为20
-                     taskId: String,
                      params: Map[String, String] = Map.empty[String, String]
                     ) {
 
@@ -39,6 +39,7 @@ case class FetchItem(value: String,
     val dos = new DataOutputStream(out)
 
     dos.writeByte(FetchItem.VERSION)
+    dos.writeUTF(taskId)
     dos.writeUTF(value)
 
     dos.writeUTF(refer.getOrElse(""))
@@ -48,7 +49,6 @@ case class FetchItem(value: String,
     dos.writeByte(retries)
     dos.writeInt(`type`.id)
     //dos.writeLong(refreshInSeconds)
-    dos.writeUTF(taskId)
 
     dos.writeInt(params.size)
     params.foreach {
@@ -76,13 +76,13 @@ case class FetchItem(value: String,
     * 复制对象，并把retries变为新的数值
     */
   def copy(newRetries: Int): FetchItem = FetchItem(
+    taskId,
     value,
     `type`,
     refer,
     anchor,
     depth,
     if (newRetries > 10) 10.toByte else newRetries.toByte,
-    taskId,
     params
   )
 
@@ -113,9 +113,9 @@ object FetchItem {
   }
 
   def readFrom(din: DataInputStream): FetchItem = {
-    val version = din.readByte() //版本
-
-    val url = din.readUTF()
+    val _ = din.readByte() //版本
+    val taskId = din.readUTF()
+    val value = din.readUTF()
 
     val referText = din.readUTF()
     val refer = if (referText.isEmpty) None else Option(referText)
@@ -126,9 +126,7 @@ object FetchItem {
     val depth = din.readInt()
     val retries = din.readByte()
     val typeId = din.readInt()
-    val `type` = FetchType(typeId)
-    //val updateFrequency = din.readLong()
-    val taskId = din.readUTF()
+    val `type` = FetchType.get(typeId)
 
     val size = din.readInt()
     val params = (1 to size).map {
@@ -136,6 +134,6 @@ object FetchItem {
         (din.readUTF(), din.readUTF())
     }.toMap
 
-    FetchItem(url, `type`, refer, anchor, depth, retries, taskId, params)
+    FetchItem(taskId, value, `type`, refer, anchor, depth, retries, params)
   }
 }

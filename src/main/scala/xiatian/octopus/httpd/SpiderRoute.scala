@@ -35,7 +35,7 @@ object SpiderRoute extends JsonSupport {
         bucket =>
           bucket.queues.asScala.map {
             case (typeId, q) =>
-              val linkType = FetchType(typeId)
+              val linkType = FetchType.get(typeId)
               val links: Seq[Json] = bucket.getLinks(linkType).map {
                 link =>
                   Map(

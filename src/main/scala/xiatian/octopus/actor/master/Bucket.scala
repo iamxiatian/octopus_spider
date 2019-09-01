@@ -80,7 +80,7 @@ class Bucket(val idx: Int, val maxSize: Int) {
       None
     else {
       val types: List[FetchType] = queues.filter(_._2.nonEmpty).map {
-        case (typeId, _) => FetchType(typeId)
+        case (typeId, _) => FetchType.get(typeId)
       }.toList
 
       // priority加1避免0溢出

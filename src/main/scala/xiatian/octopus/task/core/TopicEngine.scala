@@ -31,7 +31,7 @@ case class TopicEngine(
     val q = URLEncoder.encode(query, encoding)
     val url = queryPattern.replaceAll("\\{\\}", q)
 
-    FetchItem(url, FetchType.HubPage, None, None, 1, 0, id)
+    FetchItem(id, url, FetchType.HubPage, None, None, 1, 0)
   }
 }
 
