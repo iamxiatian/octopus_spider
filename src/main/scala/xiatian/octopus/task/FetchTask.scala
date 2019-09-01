@@ -21,14 +21,12 @@ abstract class FetchTask(val id: String,
   /**
     * 是否接收该链接，作为本任务的一个抓取链接
     *
-    * @param link
     */
   def accept(fetchItem: FetchItem): Boolean
 
   /**
     * 返回间隔多少秒之后会再次抓取的秒数, 如果永远不再抓取，返回None
     *
-    * @param link
     * @return
     */
   def nextFetchSeconds(fetchItem: FetchItem): Option[Long] = Some(MyConf.MaxTimeSeconds)

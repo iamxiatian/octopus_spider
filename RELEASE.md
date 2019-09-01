@@ -1,7 +1,6 @@
-# Octopus 1.0
 
-Goal: Run well.
 
-1. update httpclient from 4.5.2 to 4.5.6  
+# Octopus 2.1
 
-# Init
+- 完成电子报任务类型的采集
+- 增加了档案咨询数据的采集（实验使用）
