@@ -23,6 +23,9 @@ object MasterVariable {
   //统计信息
   var failureLinkCount = 0
 
+  //当前版本
+  var version = 0
+
   //最近一次报告信息
   var lastReportTime = 0L
   var lastReportMsg = """{"status": "ERROR", "data":"wait to initialize."}"""

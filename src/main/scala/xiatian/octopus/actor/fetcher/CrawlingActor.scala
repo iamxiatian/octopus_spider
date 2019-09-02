@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import xiatian.octopus.actor.store.{Store, StoreMessage}
 import xiatian.octopus.actor.{Fetch, FetchCode, FetchResult}
 import xiatian.octopus.common.Logging
+import xiatian.octopus.storage.master.TaskDb
 import xiatian.octopus.task.FetchTask
 import xiatian.octopus.util.Http
 
@@ -33,7 +34,7 @@ class CrawlingActor(storeClient: ActorRef) extends Actor with ActorLogging {
           //TODO: 根据设置信息：把采集到的内容保存起来
           // pageCacheActor ! CachingPage(link.url, link.`type`, response.getContent, response.getEncoding)
 
-          FetchTask.get(item) match {
+          TaskDb.getById(item.taskId) match {
             case Some(task) =>
               val parseResult = task.parser.get.parse(item, response).get
               if (parseResult.data.nonEmpty) {

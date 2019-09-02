@@ -9,13 +9,6 @@ import scala.util.Try
 /**
   * 电子报的文章
   *
-  * @param url
-  * @param title
-  * @param author
-  * @param pubDate
-  * @param column
-  * @param rank
-  * @param content
   */
 case class EPaperArticle(id: String,
                          url: String,

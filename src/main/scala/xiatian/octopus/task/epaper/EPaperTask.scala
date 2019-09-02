@@ -3,15 +3,13 @@ package xiatian.octopus.task.epaper
 import java.io.{DataInputStream, DataOutputStream}
 
 import xiatian.octopus.model.FetchItem
-import xiatian.octopus.task.{FetchTask, TaskType}
+import xiatian.octopus.task.{FetchTask, TaskCategory}
 
 abstract class EPaperTask(id: String,
                           name: String)
-  extends FetchTask(id, name, TaskType.EPaper) {
+  extends FetchTask(id, name, TaskCategory.EPaper) {
   /**
     * 是否接收该链接，作为本任务的一个抓取链接
-    *
-    * @param link
     */
   override def accept(fetchItem: FetchItem): Boolean = true
 

@@ -7,8 +7,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy}
 import akka.remote.{AssociatedEvent, AssociationErrorEvent, AssociationEvent, DisassociatedEvent}
 import xiatian.octopus.actor._
 import xiatian.octopus.common.{Logging, MyConf}
+import xiatian.octopus.model.Context
 import xiatian.octopus.storage.master.{FetchLogDb, WaitDb}
-import xiatian.octopus.task.FetchTask
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -161,7 +161,7 @@ class FetchMasterActor extends Actor with ActorLogging {
 
     BucketController.getFetchItem(fetcherHost, fetcherId) match {
       case Some(link) =>
-        val c = FetchTask.context(link.taskId)
+        val c = Context(version)
 
         //把当前链接标记为正在抓取，且不在桶中
         UrlManager.markFetching(link)
@@ -171,7 +171,7 @@ class FetchMasterActor extends Actor with ActorLogging {
         //print("#")
         currentSender ! NormalFetchJob(link, c, proxyHolder)
 
-//        currentSender ! "HELLO"
+        //        currentSender ! "HELLO"
 
         //log.info(s"send ${link.url} to fetcher ${fetcherId}")
 

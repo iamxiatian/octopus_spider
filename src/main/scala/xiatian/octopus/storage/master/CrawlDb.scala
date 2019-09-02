@@ -4,12 +4,10 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 
-import org.slf4j.LoggerFactory
 import xiatian.octopus.common.MyConf
 import xiatian.octopus.model.{FetchItem, FetchType}
 import xiatian.octopus.storage.Db
 import xiatian.octopus.storage.ast.QueueMapDb
-import xiatian.octopus.task.FetchTask
 
 import scala.util.{Failure, Success, Try}
 
@@ -102,7 +100,7 @@ object CrawlDb extends Db {
     * @return
     */
   def has(link: FetchItem): Boolean = {
-    val expiredSeconds = FetchTask.get(link).map {
+    val expiredSeconds = TaskDb.getById(link.taskId).map {
       task =>
         task.nextFetchSeconds(link).getOrElse(MyConf.MaxTimeSeconds)
     }.getOrElse(MyConf.MaxTimeSeconds)

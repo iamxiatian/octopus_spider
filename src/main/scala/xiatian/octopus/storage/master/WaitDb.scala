@@ -6,7 +6,6 @@ import org.joda.time.DateTime
 import xiatian.octopus.common.MyConf
 import xiatian.octopus.model.FetchItem
 import xiatian.octopus.storage.ast.{ScoreUpdate, SortedSetDb}
-import xiatian.octopus.task.FetchTask
 import xiatian.octopus.util.{HashUtil, HexBytesUtil}
 
 /**
@@ -24,7 +23,7 @@ class WaitDb(path: String) extends SortedSetDb("WaitDB", path) {
     *
     * @param link 要压入的链接
     */
-  def push(link: FetchItem): Unit = FetchTask.get(link) map {
+  def push(link: FetchItem): Unit = TaskDb.getById(link.taskId) map {
     task =>
       task.nextFetchSeconds(link).map {
         interval =>

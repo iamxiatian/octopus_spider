@@ -16,7 +16,7 @@ import xiatian.octopus.task.epaper.{EPaperTask, 人民日报, 光明日报, 新�
   */
 abstract class FetchTask(val id: String,
                          val name: String,
-                         val taskType: TaskType
+                         val taskType: TaskCategory
                         ) {
   /**
     * 是否接收该链接，作为本任务的一个抓取链接
@@ -80,31 +80,21 @@ object FetchTask extends Logging {
   def readFrom(bytes: Array[Byte]): Option[FetchTask] = {
     val din = new DataInputStream(new ByteArrayInputStream(bytes))
 
-    val taskType = TaskType(din.readInt())
+    val category = TaskCategory(din.readInt())
 
-    val result = taskType match {
-      case TaskType.ArticleHub =>
+    val result = category match {
+      case TaskCategory.ArticleHub =>
         ArticleHubTask(din)
-      case TaskType.EPaper =>
+      case TaskCategory.EPaper =>
         //电子报
         EPaperTask(din)
       case _ =>
-        LOG.error(s"俺不懂该任务类型： $taskType")
+        LOG.error(s"Can NOT parse task category： $category")
         None
     }
 
     din.close()
     result
-  }
-
-  def count(): Int = TaskDb.count()
-
-  def context(taskId: String): Context = Context()
-
-  def get(link: FetchItem): Option[FetchTask] = get(link.taskId)
-
-  def get(taskId: String): Option[FetchTask] = {
-    TaskDb.get(taskId).flatMap(readFrom(_))
   }
 
   def main(args: Array[String]): Unit = {
@@ -114,7 +104,7 @@ object FetchTask extends Logging {
 
     TaskDb.getIds().foreach {
       id =>
-        val task = get(id)
+        val task = TaskDb.getById(id)
         println("_____________________")
         task.map {
           t =>

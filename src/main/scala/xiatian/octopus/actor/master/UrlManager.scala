@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import xiatian.octopus.common.{MyConf, Symbols}
 import xiatian.octopus.model.{FetchItem, FetchType}
 import xiatian.octopus.storage.master.{StatsDb, _}
-import xiatian.octopus.task.FetchTask
 import xiatian.octopus.util.HashUtil
 
 import scala.concurrent.Future
@@ -79,7 +78,7 @@ object UrlManager extends MasterConfig {
     * url是否已经被抓取过
     */
   def isFetched(link: FetchItem) = {
-    val expiredSeconds: Long = FetchTask.get(link).map {
+    val expiredSeconds: Long = TaskDb.getById(link.taskId).map {
       task =>
         task.nextFetchSeconds(link).getOrElse(MyConf.MaxTimeSeconds)
     }.getOrElse(MyConf.MaxTimeSeconds)

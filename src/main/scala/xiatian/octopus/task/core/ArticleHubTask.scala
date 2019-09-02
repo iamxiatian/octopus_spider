@@ -3,7 +3,7 @@ package xiatian.octopus.task.core
 import java.io.{DataInputStream, DataOutputStream}
 
 import xiatian.octopus.model.{FetchItem, FetchType}
-import xiatian.octopus.task.{FetchTask, TaskType}
+import xiatian.octopus.task.{FetchTask, TaskCategory}
 
 /**
   * 由文章网页Article和中心网页Hub构成的抓取任务
@@ -14,7 +14,7 @@ class ArticleHubTask(id: String,
                      maxDepth: Int,
                      secondInterval: Long
                     )
-  extends FetchTask(id, name, TaskType.ArticleHub) {
+  extends FetchTask(id, name, TaskCategory.ArticleHub) {
   /**
     * 是否接收该链接，作为本任务的一个抓取链接. 如果可以，返回link，否则返回None
     *

@@ -67,7 +67,7 @@ class InjectActor(system: ActorSystem) extends Actor with ActorWatching {
     TaskDb.getIds().foreach {
       taskId =>
         Logging.println(s"inject $taskId")
-        val task = FetchTask.get(taskId)
+        val task = TaskDb.getById(taskId)
         if (task.nonEmpty) {
           val items = task.get.entryItems
           items.foreach {
